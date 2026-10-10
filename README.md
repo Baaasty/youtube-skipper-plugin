@@ -59,17 +59,21 @@ Alternative ohne Transkript-Scraping: Google Gemini kann YouTube-URLs direkt als
 
 1. Repository klonen oder als ZIP laden.
 2. Chrome → `chrome://extensions` → „Entwicklermodus“ einschalten → „Entpackte Erweiterung laden“ → diesen Ordner wählen.
-3. Icon der Erweiterung → „Einstellungen öffnen“ → Anthropic-API-Key eintragen (für die KI-Funktionen; Auto-Skip per SponsorBlock und Textsuche funktionieren auch ohne Key).
-4. Ein YouTube-Video öffnen. Das Panel erscheint rechts oben in der Seitenleiste.
+3. Icon der Erweiterung anklicken → Tab „Einstellungen“ → Anthropic-API-Key eintragen (für die KI-Funktionen; Auto-Skip per SponsorBlock und Textsuche funktionieren auch ohne Key).
+4. Ein YouTube-Video öffnen. Unter dem Video erscheint die Suchleiste, das Popup oben zeigt Suche/Chat und Einstellungen.
 
 ## 4. Bedienung
 
-- **⏩ Intro skippen / 💰 Sponsor skippen / 🎯 Zum Fazit** – aktiv, sobald entsprechende Segmente bekannt sind (SponsorBlock, Kapitel oder KI).
-- **✨ KI-Analyse** – erkennt Kapitel, Intro, Sponsor, Eigenwerbung, Fazit und Outro per Claude und schreibt eine Kurzzusammenfassung.
-- **Suchfeld** – `Enter` = lokale Volltextsuche, `Strg+Enter` oder „KI fragen“ = inhaltliche Frage an Claude. Treffer sind anklickbar und springen im Video.
-- **Segmentleiste** – farbige Markierungen (SponsorBlock-Farbschema), Klick springt zum Segment.
-- **Auto-Skip** – überspringt die in den Einstellungen gewählten Kategorien automatisch, mit Toast und „Rückgängig“.
-- Popup (Klick auf das Icon) für die wichtigsten Schalter, Einstellungsseite für Modell, Kategorien, Sprache und die Kostenstatistik.
+**Popup (Klick auf das Icon oben in der Toolbar)** – zwei Tabs:
+
+- **Suche**: Titel und Status des aktuellen Videos, Segmentleiste, Buttons ⏩ Intro / 💰 Sponsor / 🎯 Fazit / ✨ Analyse, Suchfeld mit Chat-Verlauf, Zusammenfassung, Kapitel und Transkript. Alles ist anklickbar und springt im YouTube-Tab. Das Popup findet den YouTube-Tab auch, wenn gerade ein anderer Tab aktiv ist.
+- **Einstellungen**: API-Key, Modell, Auto-Skip-Kategorien, SponsorBlock, Sprache, Nutzungsstatistik.
+
+**Suchleiste in YouTube (unter dem Video)** – kompakte Zeile mit Eingabefeld, 🔍 (lokale Volltextsuche, kostenlos), „KI fragen“ (inhaltliche Frage an Claude), den Sprungknöpfen Intro / Sponsor / Fazit, ✨ Analyse und einer dünnen Segmentleiste. Ergebnisse klappen darunter auf; Popup und Suchleiste zeigen denselben Chat-Verlauf.
+
+- `Enter` = Textsuche, `Strg+Enter` = KI-Frage. Treffer sind anklickbar.
+- **Auto-Skip** überspringt die gewählten Kategorien automatisch, mit Toast und „Rückgängig“.
+- **✨ Analyse** erkennt Kapitel, Intro, Sponsor, Eigenwerbung, Fazit und Outro per Claude und schreibt eine Kurzzusammenfassung. Ergebnis wird pro Video gecacht.
 
 ## 5. Aufbau
 
@@ -77,10 +81,11 @@ Alternative ohne Transkript-Scraping: Google Gemini kann YouTube-URLs direkt als
 manifest.json              MV3-Manifest
 content/main-world.js      läuft in der Seiten-World: liest Player-Antwort (Untertitelspuren, Beschreibung), seekTo
 content/lib.js             reine Logik: Kapitel-Parser, Transkript-Kompaktierung, Suche, Segment-Merge (Node-Tests)
-content/content.js         Panel-UI, Transkript-Abruf, Auto-Skip
+content/content.js         Suchleiste unter dem Video, Transkript-Abruf, Auto-Skip, Zustand fürs Popup
 content/panel.css          Styles
 background/background.js   Service Worker: SponsorBlock, Claude-API (JSON-Schema-Antworten, Prompt-Caching), Cache, Statistik
-options/, popup/           Einstellungen und Schnellschalter
+popup/                     Toolbar-Popup mit Tabs „Suche“ (Chat, Sprungknöpfe) und „Einstellungen“
+options/                   Einstellungsseite (im Popup eingebettet, auch als eigene Seite)
 test/lib.test.mjs          Unit-Tests (node --test)
 test/e2e.mjs               End-to-End-Test mit Playwright und gemockter YouTube-Seite
 ```

@@ -2,22 +2,50 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <style>
-    body { font: 13px/1.5 system-ui, sans-serif; width: 260px; margin: 0; padding: 12px; color: #111; }
-    h1 { font-size: 14px; margin: 0 0 8px; }
-    label { display: flex; gap: 8px; align-items: center; margin: 6px 0; cursor: pointer; }
-    button { width: 100%; margin-top: 10px; padding: 7px; border-radius: 6px; border: 1px solid #bbb; background: #f6f6f6; cursor: pointer; font: inherit; }
-    .warn { color: #b00; font-size: 12px; }
-  </style>
+  <title>YouTube Skipper</title>
+  <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1>⏭ YouTube Skipper</h1>
-  <label><input type="checkbox" id="autoSkip"> Auto-Skip</label>
-  <label><input type="checkbox" id="useSponsorBlock"> SponsorBlock-Daten</label>
-  <label><input type="checkbox" id="autoAnalyze"> KI-Analyse automatisch</label>
-  <label><input type="checkbox" id="showPanel"> Panel anzeigen</label>
-  <div id="keyWarn" class="warn" hidden>Kein API-Key hinterlegt – KI-Funktionen inaktiv.</div>
-  <button id="options">Einstellungen öffnen</button>
+  <header class="top">
+    <span class="brand">⏭ YouTube Skipper</span>
+    <nav class="tabs">
+      <button class="tab active" data-tab="search">Suche</button>
+      <button class="tab" data-tab="settings">Einstellungen</button>
+    </nav>
+  </header>
+
+  <section id="tab-search" class="tab-page active">
+    <div id="novideo" class="empty" hidden>
+      Öffne ein YouTube-Video, dann kannst du hier im Video suchen, Fragen stellen und springen.
+    </div>
+    <div id="video">
+      <div class="videohead">
+        <div id="title" class="title"></div>
+        <div id="status" class="status"></div>
+      </div>
+      <div id="timeline" class="timeline"></div>
+      <div class="chips">
+        <button class="chip" data-jump="intro">⏩ Intro</button>
+        <button class="chip" data-jump="sponsor">💰 Sponsor</button>
+        <button class="chip" data-jump="conclusion">🎯 Fazit</button>
+        <button class="chip" id="analyze">✨ Analyse</button>
+      </div>
+      <div class="search">
+        <input id="query" type="text" placeholder="Im Video suchen … (Enter = Text, Strg+Enter = KI)">
+        <button id="searchLocal" class="chip" title="Volltextsuche im Transkript (kostenlos)">🔍</button>
+        <button id="askAI" class="chip primary" title="Inhaltliche Frage an Claude">KI fragen</button>
+      </div>
+      <div id="chat" class="chat"></div>
+      <div id="extras"></div>
+      <div id="keyWarn" class="warn" hidden>Kein API-Key hinterlegt. KI-Funktionen sind inaktiv – im Tab „Einstellungen“ eintragen.</div>
+    </div>
+  </section>
+
+  <section id="tab-settings" class="tab-page">
+    <iframe id="settingsFrame" src="../options/options.html?embed=1" title="Einstellungen"></iframe>
+  </section>
+
+  <script src="../content/lib.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

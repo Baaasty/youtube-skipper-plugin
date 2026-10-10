@@ -72,6 +72,7 @@ const ASK_SCHEMA = {
 };
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!msg || typeof msg.type !== 'string' || msg.type.startsWith('ui:')) return undefined; // Popup/Content-Script-Nachrichten
   handle(msg)
     .then((res) => sendResponse(res))
     .catch((e) => sendResponse({ error: e && e.message ? e.message : String(e) }));

@@ -1,4 +1,5 @@
-// Isolated-World Content-Script: Transkript laden, Panel rendern, Auto-Skip.
+// Isolated-World Content-Script: Transkript laden, KI-Suchleiste unter dem Video, Auto-Skip,
+// Zustand für das Toolbar-Popup bereitstellen.
 (() => {
   'use strict';
   if (window.__ytSkipperLoaded) return;
@@ -11,7 +12,7 @@
     autoSkip: true,
     useSponsorBlock: true,
     autoAnalyze: false,
-    showPanel: true,
+    showBar: true,
     language: '',
     skipCategories: {
       sponsor: true, selfpromo: true, interaction: false, intro: false,
@@ -21,9 +22,10 @@
 
   let settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
   let state = null;       // Zustand des aktuellen Videos
-  let panel = null;       // Panel-DOM
+  let bar = null;         // Suchleiste (DOM)
   let lastUrl = '';
   let toastEl = null;
+  let resultsOpen = true;
 
   // ---------- Einstellungen ----------
   async function loadSettings() {
@@ -37,7 +39,10 @@
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'sync' && changes.settings) {
-      loadSettings().then(() => { if (panel) renderPanel(); });
+      loadSettings().then(() => {
+        if (!settings.showBar && bar) { bar.remove(); bar = null; }
+        render();
+      });
     }
   });
 
@@ -60,12 +65,11 @@
   }
 
   function teardown() {
-    if (state && state.video) {
-      state.video.removeEventListener('timeupdate', onTimeUpdate);
-    }
+    if (state && state.video) state.video.removeEventListener('timeupdate', onTimeUpdate);
     state = null;
-    if (panel) panel.remove();
-    panel = null;
+    if (bar) bar.remove();
+    bar = null;
+    notifyPopup();
   }
 
   // ---------- Kommunikation mit MAIN-World ----------
@@ -191,8 +195,7 @@
       chapters: [], segments: [], analysis: null, skipped: new Set(),
       chat: [], busy: false, status: 'Lade Videodaten…', error: '',
     };
-    ensurePanel();
-    renderPanel();
+    render();
 
     const info = await requestPlayerInfo(videoId);
     if (!state || state.videoId !== videoId) return;
@@ -207,7 +210,7 @@
         if (!state || state.videoId !== videoId) return;
         if (res.segments) addSegments(res.segments);
         else if (res.error) LOG('SponsorBlock:', res.error);
-        renderPanel();
+        render();
       });
     }
 
@@ -221,7 +224,7 @@
       if (!state || state.videoId !== videoId) return;
       setStatus('Kein Transkript: ' + e.message, true);
     }
-    renderPanel();
+    render();
 
     if (settings.autoAnalyze && state.transcript) {
       runAnalysis(false).catch((e) => setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true));
@@ -231,6 +234,7 @@
   function attachVideo() {
     const v = document.querySelector('video.html5-main-video') || document.querySelector('video');
     if (!v) { setTimeout(attachVideo, 500); return; }
+    if (!state) return;
     if (state.video === v) return;
     if (state.video) state.video.removeEventListener('timeupdate', onTimeUpdate);
     state.video = v;
@@ -246,7 +250,8 @@
     if (!state) return;
     state.status = text;
     state.error = isError ? text : '';
-    if (panel) renderStatus();
+    renderStatus();
+    notifyPopup();
   }
 
   // ---------- Auto-Skip ----------
@@ -281,18 +286,30 @@
   // ---------- Sprung-Aktionen ----------
   function currentTime() { return state && state.video ? state.video.currentTime : 0; }
 
-  function jumpSkip(categories, label) {
-    const seg = L.findNextSegment(state.segments, categories, currentTime());
-    if (!seg) { setStatus(`Kein ${label}-Segment bekannt – ggf. KI-Analyse starten.`); return; }
-    seek(seg.end);
-    showToast(`${label} übersprungen → ${L.formatTime(seg.end)}`);
+  const JUMPS = {
+    intro: { cats: ['intro'], label: 'Intro', mode: 'skip' },
+    sponsor: { cats: ['sponsor', 'selfpromo'], label: 'Sponsor', mode: 'skip' },
+    conclusion: { cats: ['conclusion', 'outro'], label: 'Fazit', mode: 'to' },
+  };
+
+  function hasJump(key) {
+    return !!state && state.segments.some((s) => JUMPS[key].cats.includes(s.category));
   }
 
-  function jumpTo(categories, label) {
-    const seg = state.segments.find((s) => categories.includes(s.category));
-    if (!seg) { setStatus(`${label} nicht gefunden – ggf. KI-Analyse starten.`); return; }
-    seek(seg.start);
-    showToast(`${label} → ${L.formatTime(seg.start)}`);
+  function jump(key) {
+    const j = JUMPS[key];
+    if (!j || !state) return;
+    if (j.mode === 'skip') {
+      const seg = L.findNextSegment(state.segments, j.cats, currentTime());
+      if (!seg) { setStatus(`Kein ${j.label}-Segment bekannt – ggf. KI-Analyse starten.`); return; }
+      seek(seg.end);
+      showToast(`${j.label} übersprungen → ${L.formatTime(seg.end)}`);
+    } else {
+      const seg = state.segments.find((s) => j.cats.includes(s.category));
+      if (!seg) { setStatus(`${j.label} nicht gefunden – ggf. KI-Analyse starten.`); return; }
+      seek(seg.start);
+      showToast(`${j.label} → ${L.formatTime(seg.start)}`);
+    }
   }
 
   // ---------- KI ----------
@@ -301,7 +318,7 @@
     const videoId = state.videoId;
     state.busy = true;
     setStatus('KI-Analyse läuft…');
-    renderPanel();
+    render();
     try {
       const res = await sendMessage({
         type: 'analyze', videoId, force: !!force,
@@ -319,8 +336,10 @@
       if (aiChapters.length && !state.chapters.length) state.chapters = aiChapters;
       addSegments(aiSegs);
       setStatus(res.cached ? 'KI-Analyse (aus Cache)' : 'KI-Analyse fertig');
+    } catch (e) {
+      setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true);
     } finally {
-      if (state && state.videoId === videoId) { state.busy = false; renderPanel(); }
+      if (state && state.videoId === videoId) { state.busy = false; render(); }
     }
   }
 
@@ -329,7 +348,8 @@
     const videoId = state.videoId;
     state.chat.push({ role: 'user', text: question });
     state.busy = true;
-    renderPanel();
+    resultsOpen = true;
+    render();
     try {
       const res = await sendMessage({
         type: 'ask', videoId, question, title: state.info.title, transcriptText: state.transcriptText,
@@ -340,11 +360,12 @@
     } catch (e) {
       state.chat.push({ role: 'bot', text: 'Fehler: ' + e.message, matches: [] });
     } finally {
-      if (state && state.videoId === videoId) { state.busy = false; renderPanel(); }
+      if (state && state.videoId === videoId) { state.busy = false; render(); }
     }
   }
 
   function localSearch(query) {
+    if (!state || !state.transcript) return;
     const hits = L.searchTranscript(state.transcript.lines, query, 8);
     state.chat.push({ role: 'user', text: query });
     state.chat.push({
@@ -353,10 +374,59 @@
       matches: hits.map((h) => ({ start: h.start, label: h.text })),
       highlight: query,
     });
-    renderPanel();
+    resultsOpen = true;
+    render();
   }
 
-  // ---------- Panel ----------
+  // ---------- Schnittstelle zum Popup ----------
+  function snapshot() {
+    if (!state) return { active: false };
+    return {
+      active: true,
+      videoId: state.videoId,
+      title: state.info ? state.info.title : '',
+      lengthSeconds: state.info ? state.info.lengthSeconds : 0,
+      currentTime: currentTime(),
+      status: state.status,
+      error: state.error,
+      busy: state.busy,
+      hasTranscript: !!state.transcript,
+      hasAnalysis: !!state.analysis,
+      summary: state.analysis ? state.analysis.summary : '',
+      segments: state.segments,
+      chapters: state.chapters,
+      chat: state.chat,
+      jumps: { intro: hasJump('intro'), sponsor: hasJump('sponsor'), conclusion: hasJump('conclusion') },
+      transcript: state.transcript ? L.compactTranscript(state.transcript.lines) : [],
+    };
+  }
+
+  function notifyPopup() {
+    try {
+      chrome.runtime.sendMessage({ type: 'ui:changed' }, () => { void chrome.runtime.lastError; });
+    } catch (e) { /* kein Empfänger */ }
+  }
+
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg || typeof msg.type !== 'string' || !msg.type.startsWith('ui:') || msg.type === 'ui:changed') return undefined;
+    handleUi(msg).then(sendResponse).catch((e) => sendResponse({ error: e.message }));
+    return true;
+  });
+
+  async function handleUi(msg) {
+    switch (msg.type) {
+      case 'ui:state': return snapshot();
+      case 'ui:seek': seek(Number(msg.t)); return snapshot();
+      case 'ui:search': localSearch(String(msg.query || '')); return snapshot();
+      case 'ui:ask': await askAI(String(msg.question || '')); return snapshot();
+      case 'ui:analyze': await runAnalysis(!!msg.force); return snapshot();
+      case 'ui:jump': jump(msg.action); return snapshot();
+      case 'ui:clearChat': if (state) state.chat = []; render(); return snapshot();
+      default: throw new Error('Unbekannt: ' + msg.type);
+    }
+  }
+
+  // ---------- Suchleiste ----------
   function el(tag, props, children) {
     const node = document.createElement(tag);
     if (props) {
@@ -375,17 +445,18 @@
     return node;
   }
 
-  function ensurePanel() {
-    if (!settings.showPanel) return;
-    if (panel && document.contains(panel)) return;
-    panel = el('div', { id: 'yt-skipper-panel' });
-    const host = document.querySelector('#secondary-inner') || document.querySelector('#secondary') || document.querySelector('#below');
-    if (!host) { setTimeout(ensurePanel, 700); return; }
-    host.prepend(panel);
+  function ensureBar() {
+    if (!settings.showBar || !state) return false;
+    if (bar && document.contains(bar)) return true;
+    const host = document.querySelector('#below') || document.querySelector('#primary-inner') || document.querySelector('#secondary-inner');
+    if (!host) { setTimeout(render, 700); return false; }
+    bar = el('div', { id: 'yt-skipper-bar' });
+    host.prepend(bar);
+    return true;
   }
 
   function renderStatus() {
-    const s = panel && panel.querySelector('.yts-status');
+    const s = bar && bar.querySelector('.yts-status');
     if (!s || !state) return;
     s.textContent = state.status;
     s.classList.toggle('yts-error', !!state.error);
@@ -414,99 +485,91 @@
     ]);
   }
 
-  function renderPanel() {
-    if (!panel || !state) return;
-    ensurePanel();
-    if (!document.contains(panel)) return;
-    panel.replaceChildren();
+  function render() {
+    notifyPopup();
+    if (!state || !ensureBar()) return;
+    bar.replaceChildren();
     const hasTranscript = !!state.transcript;
     const length = (state.info && state.info.lengthSeconds) || 0;
 
-    panel.appendChild(el('div', { className: 'yts-head' }, [
-      el('span', { className: 'yts-title' }, ['⏭ YouTube Skipper']),
-      el('span', { className: 'yts-status' + (state.error ? ' yts-error' : '') }, [state.status]),
-    ]));
-
     // Segmentleiste
-    if (length && state.segments.length) {
-      const bar = el('div', { className: 'yts-bar' });
+    const timeline = el('div', { className: 'yts-bar-timeline' });
+    if (length) {
       for (const s of state.segments) {
         const left = (s.start / length) * 100;
         const width = Math.max(0.4, ((s.end - s.start) / length) * 100);
-        bar.appendChild(el('span', {
+        timeline.appendChild(el('span', {
           className: 'c-' + s.category,
           style: `left:${left}%;width:${width}%`,
           title: `${L.CATEGORY_LABELS[s.category] || s.category}${s.title ? ': ' + s.title : ''} (${L.formatTime(s.start)} – ${L.formatTime(s.end)}, ${s.source})`,
           onclick: () => seek(s.start),
         }));
       }
-      panel.appendChild(bar);
     }
+    bar.appendChild(timeline);
 
-    // Buttons
-    const has = (cats) => state.segments.some((s) => cats.includes(s.category));
-    panel.appendChild(el('div', { className: 'yts-row' }, [
-      el('button', { className: 'yts-btn', disabled: has(['intro']) ? null : 'disabled', onclick: () => jumpSkip(['intro'], 'Intro') }, ['⏩ Intro skippen']),
-      el('button', { className: 'yts-btn', disabled: has(['sponsor', 'selfpromo']) ? null : 'disabled', onclick: () => jumpSkip(['sponsor', 'selfpromo'], 'Sponsor') }, ['💰 Sponsor skippen']),
-      el('button', { className: 'yts-btn', disabled: has(['conclusion', 'outro']) ? null : 'disabled', onclick: () => jumpTo(['conclusion', 'outro'], 'Fazit') }, ['🎯 Zum Fazit']),
-      el('button', {
-        className: 'yts-btn primary', disabled: hasTranscript && !state.busy ? null : 'disabled',
-        title: 'Kapitel, Intro/Outro, Sponsor und Fazit per Claude erkennen',
-        onclick: () => runAnalysis(!!state.analysis).catch((e) => setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true)),
-      }, [state.analysis ? '🔄 KI-Analyse erneut' : '✨ KI-Analyse']),
-    ]));
-
-    // Kapitel
-    if (state.chapters.length) {
-      const list = el('div', { className: 'yts-chapters' });
-      for (const c of state.chapters) list.appendChild(hitRow(c.start, c.title));
-      panel.appendChild(el('details', null, [el('summary', null, [`Kapitel (${state.chapters.length})`]), list]));
-    }
-
-    // Suche / Chat
-    const input = el('input', { type: 'text', placeholder: hasTranscript ? 'Stelle suchen, z. B. „Preis“ oder „wo erklärt er die Installation?“' : 'Kein Transkript verfügbar', disabled: hasTranscript ? null : 'disabled' });
-    const doLocal = () => { const q = input.value.trim(); if (q) { localSearch(q); input.value = ''; } };
-    const doAI = () => { const q = input.value.trim(); if (q) { askAI(q); input.value = ''; } };
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { if (e.shiftKey || e.ctrlKey) doAI(); else doLocal(); } e.stopPropagation(); });
+    // Suchzeile
+    const input = el('input', {
+      type: 'text', className: 'yts-input',
+      placeholder: hasTranscript ? 'Im Video suchen … (Enter = Text, Strg+Enter = KI)' : 'Kein Transkript verfügbar',
+      disabled: !hasTranscript,
+    });
+    const doLocal = () => { const q = input.value.trim(); if (q) { localSearch(q); } };
+    const doAI = () => { const q = input.value.trim(); if (q) { askAI(q); } };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { if (e.shiftKey || e.ctrlKey || e.metaKey) doAI(); else doLocal(); }
+      e.stopPropagation();
+    });
     input.addEventListener('keyup', (e) => e.stopPropagation());
-    panel.appendChild(el('div', { className: 'yts-search' }, [
+    input.addEventListener('keypress', (e) => e.stopPropagation());
+
+    const chip = (key, icon, label) => el('button', {
+      className: 'yts-chip', disabled: !hasJump(key), title: label, onclick: () => jump(key),
+    }, [icon + ' ' + label]);
+
+    bar.appendChild(el('div', { className: 'yts-bar-row' }, [
+      el('span', { className: 'yts-logo', title: 'YouTube Skipper' }, ['⏭']),
       input,
-      el('button', { className: 'yts-btn', disabled: hasTranscript ? null : 'disabled', onclick: doLocal, title: 'Volltextsuche im Transkript (ohne KI, kostenlos)' }, ['🔍']),
-      el('button', { className: 'yts-btn primary', disabled: hasTranscript && !state.busy ? null : 'disabled', onclick: doAI, title: 'Inhaltliche Frage an Claude (Strg+Enter)' }, ['KI fragen']),
+      el('button', { className: 'yts-chip', disabled: !hasTranscript, onclick: doLocal, title: 'Volltextsuche im Transkript (kostenlos)' }, ['🔍']),
+      el('button', { className: 'yts-chip primary', disabled: !hasTranscript || state.busy, onclick: doAI, title: 'Inhaltliche Frage an Claude' }, ['KI fragen']),
+      chip('intro', '⏩', 'Intro'),
+      chip('sponsor', '💰', 'Sponsor'),
+      chip('conclusion', '🎯', 'Fazit'),
+      el('button', {
+        className: 'yts-chip', disabled: !hasTranscript || state.busy,
+        title: 'Kapitel, Intro/Outro, Sponsor und Fazit per Claude erkennen',
+        onclick: () => runAnalysis(!!state.analysis),
+      }, [state.busy ? '…' : (state.analysis ? '🔄' : '✨'), ' Analyse']),
+      el('button', {
+        className: 'yts-chip', title: resultsOpen ? 'Ergebnisse einklappen' : 'Ergebnisse ausklappen',
+        onclick: () => { resultsOpen = !resultsOpen; render(); },
+      }, [resultsOpen ? '▴' : '▾']),
     ]));
 
-    if (state.chat.length) {
-      const results = el('div', { className: 'yts-results' });
-      for (const m of state.chat) {
-        const box = el('div', { className: 'yts-msg ' + m.role }, [m.text]);
-        for (const hit of m.matches || []) box.appendChild(hitRow(hit.start, hit.label, m.highlight));
-        results.appendChild(box);
-      }
-      panel.appendChild(results);
-      results.scrollTop = results.scrollHeight;
-    }
-
-    if (state.analysis && state.analysis.summary) {
-      panel.appendChild(el('details', null, [el('summary', null, ['Zusammenfassung (KI)']), el('div', { className: 'yts-msg' }, [state.analysis.summary])]));
-    }
-
-    if (hasTranscript) {
-      const tr = el('div', { className: 'yts-transcript' });
-      const det = el('details', null, [el('summary', null, ['Transkript anzeigen']), tr]);
-      det.addEventListener('toggle', () => {
-        if (det.open && !tr.childElementCount) {
-          for (const b of L.compactTranscript(state.transcript.lines)) tr.appendChild(hitRow(b.start, b.text));
+    // Ergebnisse / Chat
+    if (resultsOpen && (state.chat.length || state.chapters.length || state.analysis)) {
+      const box = el('div', { className: 'yts-results' });
+      if (state.chat.length) {
+        for (const m of state.chat) {
+          const msg = el('div', { className: 'yts-msg ' + m.role }, [m.text]);
+          for (const hit of m.matches || []) msg.appendChild(hitRow(hit.start, hit.label, m.highlight));
+          box.appendChild(msg);
         }
-      });
-      panel.appendChild(det);
+        box.appendChild(el('button', { className: 'yts-link', onclick: () => { state.chat = []; render(); } }, ['Verlauf leeren']));
+      }
+      if (state.analysis && state.analysis.summary) {
+        box.appendChild(el('details', null, [el('summary', null, ['Zusammenfassung (KI)']), el('div', { className: 'yts-msg' }, [state.analysis.summary])]));
+      }
+      if (state.chapters.length) {
+        const list = el('div', { className: 'yts-chapters' });
+        for (const c of state.chapters) list.appendChild(hitRow(c.start, c.title));
+        box.appendChild(el('details', null, [el('summary', null, [`Kapitel (${state.chapters.length})`]), list]));
+      }
+      bar.appendChild(box);
+      box.scrollTop = box.scrollHeight;
     }
 
-    panel.appendChild(el('div', { className: 'yts-small' }, [
-      settings.autoSkip
-        ? 'Auto-Skip aktiv: ' + Object.entries(settings.skipCategories).filter(([, v]) => v).map(([k]) => L.CATEGORY_LABELS[k]).join(', ')
-        : 'Auto-Skip deaktiviert',
-      ' · Quellen: ' + [...new Set(state.segments.map((s) => s.source))].join(', ') || '–',
-    ]));
+    bar.appendChild(el('div', { className: 'yts-status' + (state.error ? ' yts-error' : '') }, [state.status]));
   }
 
   // ---------- Start ----------

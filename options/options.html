@@ -14,6 +14,10 @@
     button { padding: 7px 14px; border-radius: 6px; border: 1px solid #bbb; background: #f6f6f6; cursor: pointer; font: inherit; }
     button.primary { background: #cc0000; color: #fff; border-color: #cc0000; }
     #saved { color: #2a7; margin-left: 10px; }
+    body.embed { max-width: none; margin: 0; padding: 4px 12px 12px; font-size: 13px; }
+    body.embed h1 { display: none; }
+    body.embed h2 { margin-top: 16px; }
+    @media (prefers-color-scheme: dark) { body { color: #eee; background: #202020; } input, select { background: #2c2c2c; color: #eee; border-color: #444; } button { background: #2c2c2c; color: #eee; border-color: #444; } h2 { border-color: #3a3a3a; } td, th { border-color: #3a3a3a; } }
     table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { border-bottom: 1px solid #eee; padding: 4px 6px; text-align: right; } th:first-child, td:first-child { text-align: left; }
   </style>
 </head>
@@ -41,7 +45,7 @@
   <div id="categories"></div>
 
   <h2>Allgemein</h2>
-  <label><input type="checkbox" id="showPanel"> Panel auf der Videoseite anzeigen</label>
+  <label><input type="checkbox" id="showBar"> Suchleiste unter dem Video anzeigen</label>
   <label>Bevorzugte Untertitel-Sprache (Code, z. B. <code>de</code>, <code>en</code>; leer = Browsersprache)
     <input type="text" id="language" placeholder="de">
   </label>

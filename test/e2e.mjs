@@ -73,6 +73,7 @@ const ctx = await chromium.launchPersistentContext(SCR + '/profile-e2e', {
 });
 await ctx.route('**/*', async (route) => {
   const url = route.request().url();
+  if (url.startsWith('chrome-extension://')) return route.continue();
   if (url.startsWith('https://www.youtube.com/watch')) return route.fulfill({ contentType: 'text/html', body: watchHtml });
   if (url.startsWith('https://www.youtube.com/api/timedtext')) {
     expect(url.includes('lang=de') && url.includes('fmt=json3'), 'deutsche Spur mit fmt=json3 angefragt');
@@ -116,23 +117,23 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('net::ERR')) errors.push(m.text()); });
 await page.goto(`https://www.youtube.com/watch?v=${VID}`);
-await page.waitForSelector('#yt-skipper-panel');
-await page.waitForFunction(() => /Transkript geladen|KI-Analyse/.test(document.querySelector('#yt-skipper-panel .yts-status').textContent), null, { timeout: 15000 });
-log('status:', await page.textContent('#yt-skipper-panel .yts-status'));
-await page.waitForFunction(() => /KI-Analyse fertig/.test(document.querySelector('#yt-skipper-panel .yts-status').textContent), null, { timeout: 15000 }).catch(() => {});
-log('status:', await page.textContent('#yt-skipper-panel .yts-status'));
+await page.waitForSelector('#yt-skipper-bar');
+await page.waitForFunction(() => /Transkript geladen|KI-Analyse/.test(document.querySelector('#yt-skipper-bar .yts-status').textContent), null, { timeout: 15000 });
+log('status:', await page.textContent('#yt-skipper-bar .yts-status'));
+await page.waitForFunction(() => /KI-Analyse fertig/.test(document.querySelector('#yt-skipper-bar .yts-status').textContent), null, { timeout: 15000 }).catch(() => {});
+log('status:', await page.textContent('#yt-skipper-bar .yts-status'));
 
-const buttons = await page.$$eval('#yt-skipper-panel .yts-btn', (b) => b.map((x) => x.textContent.trim() + (x.disabled ? ' (aus)' : '')));
+const buttons = await page.$$eval('#yt-skipper-bar .yts-chip', (b) => b.map((x) => x.textContent.trim() + (x.disabled ? ' (aus)' : '')));
 log('buttons:', buttons.join(' | '));
 expect(buttons.some((b) => b.startsWith('⏩') && !b.includes('(aus)')), 'Intro-Button aktiv');
 expect(buttons.some((b) => b.startsWith('💰') && !b.includes('(aus)')), 'Sponsor-Button aktiv');
 expect(buttons.some((b) => b.startsWith('🎯') && !b.includes('(aus)')), 'Fazit-Button aktiv');
-const segs = await page.$$eval('#yt-skipper-panel .yts-bar span', (s) => s.map((x) => x.title));
+const segs = await page.$$eval('#yt-skipper-bar .yts-bar-timeline span', (s) => s.map((x) => x.title));
 log('segmente:', segs.join(' || '));
 expect(segs.some((t) => t.startsWith('Sponsor') && t.includes('sponsorblock')), 'SponsorBlock-Segment vorhanden (Service-Worker-Fetch)');
 expect(segs.some((t) => t.includes('ai')), 'KI-Segmente vorhanden');
 expect(segs.some((t) => t.startsWith('Sponsor') && t.includes('0:33 – 0:55')), 'überlappende Sponsor-Segmente (SB 40–55 + KI 33–55) vereinigt');
-const chapters = await page.$$eval('#yt-skipper-panel .yts-chapters .yts-hit', (h) => h.map((x) => x.textContent));
+const chapters = await page.$$eval('#yt-skipper-bar .yts-chapters .yts-hit', (h) => h.map((x) => x.textContent));
 expect(chapters.length === 4, 'Kapitel aus Beschreibung (' + chapters.length + ')');
 
 // Claude-Request prüfen
@@ -147,29 +148,29 @@ if (apiCalls[0]) {
 }
 
 // Zum Fazit
-await page.click('#yt-skipper-panel .yts-btn:has-text("Zum Fazit")');
+await page.click('#yt-skipper-bar .yts-chip:has-text("Fazit")');
 await page.waitForTimeout(500);
 let ct = await page.$eval('video', (v) => v.currentTime);
 expect(Math.abs(ct - 90) < 1.5, 'Zum Fazit springt auf Kapitel „Fazit“ bei 1:30 (ist ' + ct.toFixed(1) + ')');
 
 // Lokale Suche
-await page.fill('#yt-skipper-panel .yts-search input', 'Preis Euro');
-await page.press('#yt-skipper-panel .yts-search input', 'Enter');
-await page.waitForSelector('#yt-skipper-panel .yts-msg.bot');
-const hits = await page.$$eval('#yt-skipper-panel .yts-msg.bot .yts-hit', (h) => h.map((x) => x.textContent));
+await page.fill('#yt-skipper-bar .yts-input', 'Preis Euro');
+await page.press('#yt-skipper-bar .yts-input', 'Enter');
+await page.waitForSelector('#yt-skipper-bar .yts-msg.bot');
+const hits = await page.$$eval('#yt-skipper-bar .yts-msg.bot .yts-hit', (h) => h.map((x) => x.textContent));
 log('suche:', hits.join(' || '));
 expect(hits.length >= 1 && hits[0].startsWith('1:17'), 'lokale Suche findet Preis-Stelle bei 1:17');
-expect(await page.$$eval('#yt-skipper-panel mark', (m) => m.length) >= 2, 'Treffer hervorgehoben');
-await page.click('#yt-skipper-panel .yts-msg.bot .yts-hit');
+expect(await page.$$eval('#yt-skipper-bar mark', (m) => m.length) >= 2, 'Treffer hervorgehoben');
+await page.click('#yt-skipper-bar .yts-msg.bot .yts-hit');
 await page.waitForTimeout(400);
 ct = await page.$eval('video', (v) => v.currentTime);
 expect(Math.abs(ct - 77) < 1.5, 'Klick auf Treffer springt im Video (ist ' + ct.toFixed(1) + ')');
 
 // KI fragen
-await page.fill('#yt-skipper-panel .yts-search input', 'Wo wird der Preis genannt?');
-await page.click('#yt-skipper-panel .yts-btn:has-text("KI fragen")');
-await page.waitForFunction(() => document.querySelectorAll('#yt-skipper-panel .yts-msg.bot').length >= 2, null, { timeout: 10000 });
-const bot = await page.$$eval('#yt-skipper-panel .yts-msg.bot', (m) => m.map((x) => x.textContent));
+await page.fill('#yt-skipper-bar .yts-input', 'Wo wird der Preis genannt?');
+await page.click('#yt-skipper-bar .yts-chip:has-text("KI fragen")');
+await page.waitForFunction(() => document.querySelectorAll('#yt-skipper-bar .yts-msg.bot').length >= 2, null, { timeout: 10000 });
+const bot = await page.$$eval('#yt-skipper-bar .yts-msg.bot', (m) => m.map((x) => x.textContent));
 log('ki:', bot[bot.length - 1]);
 expect(bot[bot.length - 1].includes('zehn Euro') && bot[bot.length - 1].includes('1:17'), 'KI-Antwort mit Treffer gerendert');
 expect(apiCalls.length === 2 && apiCalls[1].body.output_config.effort === 'low', 'Frage-Request mit effort=low');
@@ -194,13 +195,48 @@ expect(usage.usageTotals?.['claude-opus-5-5']?.calls === 2 && usage['analysis:te
 
 // Cache-Treffer bei erneutem Laden
 await page.goto('https://www.youtube.com/watch?v=' + VID);
-await page.waitForFunction(() => /aus Cache/.test(document.querySelector('#yt-skipper-panel .yts-status')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
-log('status 2. Laden:', await page.textContent('#yt-skipper-panel .yts-status'));
+await page.waitForFunction(() => /aus Cache/.test(document.querySelector('#yt-skipper-bar .yts-status')?.textContent || ''), null, { timeout: 15000 }).catch(() => {});
+log('status 2. Laden:', await page.textContent('#yt-skipper-bar .yts-status'));
 expect(apiCalls.length === 2, 'kein weiterer API-Aufruf beim zweiten Laden (Cache)');
+
+// Toolbar-Popup: findet den YouTube-Tab, zeigt denselben Chat, kann suchen und springen
+const extId = new URL(sw.url()).host;
+const popup = await ctx.newPage();
+popup.on('pageerror', (e) => errors.push('popup: ' + e.message));
+await popup.goto(`chrome-extension://${extId}/popup/popup.html`);
+await popup.waitForFunction(() => !document.getElementById('video').hidden && document.getElementById('title').textContent.length > 0, null, { timeout: 10000 });
+expect((await popup.textContent('#title')) === 'Testvideo', 'Popup zeigt Titel des YouTube-Tabs');
+expect((await popup.$$eval('#chat .msg', (m) => m.length)) === 0, 'Popup-Chat ist nach Neuladen der Seite leer');
+expect((await popup.$$eval('#timeline span', (m) => m.length)) >= 5, 'Popup zeigt die Segmentleiste');
+await popup.fill('#query', 'Konfiguration');
+await popup.press('#query', 'Enter');
+await popup.waitForFunction(() => /Konfiguration/.test(document.getElementById('chat').textContent) && document.querySelectorAll('#chat .hit').length > 0, null, { timeout: 10000 });
+const popHits = await popup.$$eval('#chat .msg:last-of-type .hit', (h) => h.map((x) => x.textContent));
+expect(popHits.some((h) => h.startsWith('1:06')), 'Suche aus dem Popup findet 1:06 (' + popHits.join(' | ') + ')');
+expect((await popup.$$eval('#chat .msg', (m) => m.length)) === 2, 'Popup zeigt den Chat-Verlauf (Frage + Antwort)');
+await popup.click('#chat .msg:last-of-type .hit');
+await page.waitForTimeout(400);
+ct = await page.$eval('video', (v) => v.currentTime);
+expect(Math.abs(ct - 66) < 1.5, 'Klick im Popup springt im YouTube-Tab (ist ' + ct.toFixed(1) + ')');
+expect(/Konfiguration/.test(await page.textContent('#yt-skipper-bar')), 'Popup-Suche erscheint auch in der Suchleiste der Seite');
+await page.$eval('video', (v) => { v.currentTime = 3; });
+await page.waitForTimeout(300);
+await popup.click('[data-jump="intro"]');
+await page.waitForTimeout(400);
+ct = await page.$eval('video', (v) => v.currentTime);
+expect(Math.abs(ct - 20) < 1.5, 'Intro skippen aus dem Popup (ist ' + ct.toFixed(1) + ')');
+await popup.click('.tab[data-tab="settings"]');
+const frame = popup.frameLocator('#settingsFrame');
+await frame.locator('#apiKey').waitFor();
+expect((await frame.locator('#model').inputValue()) === 'claude-opus-5-5', 'Einstellungen-Tab lädt gespeicherte Werte');
+await popup.screenshot({ path: SCR + '/popup-settings.png' });
+await popup.click('.tab[data-tab="search"]');
+await popup.screenshot({ path: SCR + '/popup.png' });
+await popup.close();
 
 await page.screenshot({ path: SCR + '/e2e.png', fullPage: true });
 log('page errors:', JSON.stringify(errors));
 expect(errors.length === 0, 'keine JS-Fehler');
 await ctx.close();
-fs.rmSync(SCR, { recursive: true, force: true });
+if (process.env.E2E_KEEP) log('Artefakte:', SCR); else fs.rmSync(SCR, { recursive: true, force: true });
 log(process.exitCode ? 'E2E: FEHLER' : 'E2E: alle Prüfungen bestanden');

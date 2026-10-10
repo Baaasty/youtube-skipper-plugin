@@ -12,7 +12,7 @@ const CATEGORIES = [
 ];
 
 const DEFAULTS = {
-  autoSkip: true, useSponsorBlock: true, autoAnalyze: false, showPanel: true, language: '',
+  autoSkip: true, useSponsorBlock: true, autoAnalyze: false, showBar: true, language: '',
   model: 'claude-opus-5-5',
   skipCategories: { sponsor: true, selfpromo: true, interaction: false, intro: false, outro: false, preview: false, filler: false, music_offtopic: false },
 };
@@ -40,7 +40,7 @@ async function load() {
   $('autoAnalyze').checked = s.autoAnalyze;
   $('autoSkip').checked = s.autoSkip;
   $('useSponsorBlock').checked = s.useSponsorBlock;
-  $('showPanel').checked = s.showPanel;
+  $('showBar').checked = s.showBar;
   $('language').value = s.language;
   renderCategories(s.skipCategories);
   await renderUsage();
@@ -54,7 +54,7 @@ async function save() {
     autoAnalyze: $('autoAnalyze').checked,
     autoSkip: $('autoSkip').checked,
     useSponsorBlock: $('useSponsorBlock').checked,
-    showPanel: $('showPanel').checked,
+    showBar: $('showBar').checked,
     language: $('language').value.trim().toLowerCase(),
     skipCategories,
   };
@@ -87,6 +87,7 @@ async function renderUsage() {
 }
 
 $('save').addEventListener('click', save);
+if (new URLSearchParams(location.search).get('embed') === '1') document.body.classList.add('embed');
 $('clearCache').addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'clearCache' });
   await renderUsage();
