@@ -26,6 +26,22 @@
     return '';
   }
 
+  // Parameter des "Transkript anzeigen"-Endpunkts aus den Seitendaten (für den get_transcript-Fallback).
+  function findTranscriptParams(videoId) {
+    const sources = [];
+    try { const app = document.querySelector('ytd-app'); if (app && app.data) sources.push(app.data); } catch (e) { /* ignore */ }
+    if (window.ytInitialData) sources.push(window.ytInitialData);
+    for (const src of sources) {
+      try {
+        const text = JSON.stringify(src);
+        if (videoId && !text.includes('"videoId":"' + videoId + '"')) continue;
+        const m = text.match(/"getTranscriptEndpoint":\{"params":"([^"]+)"/);
+        if (m) return m[1];
+      } catch (e) { /* ignore */ }
+    }
+    return '';
+  }
+
   function ytcfgGet(key) {
     try { return window.ytcfg && typeof window.ytcfg.get === 'function' ? window.ytcfg.get(key) : undefined; } catch (e) { return undefined; }
   }
@@ -49,6 +65,7 @@
           kind: t.kind || '',
           name: trackName(t),
         })),
+        transcriptParams: findTranscriptParams(r.videoDetails.videoId),
         clientVersion: ytcfgGet('INNERTUBE_CLIENT_VERSION') || '',
         apiKey: ytcfgGet('INNERTUBE_API_KEY') || '',
       };

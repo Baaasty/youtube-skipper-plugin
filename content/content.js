@@ -56,6 +56,8 @@
   }
 
   function checkNavigation() {
+    // Leiste neu einhängen, falls YouTube den Bereich unter dem Video neu aufgebaut hat.
+    if (state && settings.showBar && bar && !document.contains(bar)) { bar = null; render(); }
     if (location.href === lastUrl) return;
     lastUrl = location.href;
     const id = getVideoId();
@@ -139,8 +141,9 @@
   // Fallback: interne "get_transcript"-API (gleicher Endpunkt wie der "Transkript anzeigen"-Button).
   async function fetchViaInnerTube(info) {
     const vid = info.videoId;
+    // Bevorzugt die echten Parameter aus den Seitendaten, sonst minimale Protobuf-Variante (Feld 1 = videoId).
     const bytes = [0x0a, vid.length].concat(Array.from(vid, (c) => c.charCodeAt(0)));
-    const params = btoa(String.fromCharCode(...bytes));
+    const params = info.transcriptParams || btoa(String.fromCharCode(...bytes));
     const url = 'https://www.youtube.com/youtubei/v1/get_transcript?prettyPrint=false'
       + (info.apiKey ? '&key=' + encodeURIComponent(info.apiKey) : '');
     const body = {
@@ -305,7 +308,9 @@
       seek(seg.end);
       showToast(`${j.label} übersprungen → ${L.formatTime(seg.end)}`);
     } else {
-      const seg = state.segments.find((s) => j.cats.includes(s.category));
+      // Erste Kategorie bevorzugen (Fazit vor Outro).
+      let seg = null;
+      for (const cat of j.cats) { seg = state.segments.find((s) => s.category === cat); if (seg) break; }
       if (!seg) { setStatus(`${j.label} nicht gefunden – ggf. KI-Analyse starten.`); return; }
       seek(seg.start);
       showToast(`${j.label} → ${L.formatTime(seg.start)}`);
@@ -488,6 +493,9 @@
   function render() {
     notifyPopup();
     if (!state || !ensureBar()) return;
+    // Eingabe und Fokus über das Neu-Rendern hinweg erhalten.
+    const oldInput = bar.querySelector('.yts-input');
+    const keep = oldInput ? { value: oldInput.value, focused: document.activeElement === oldInput, pos: oldInput.selectionStart } : null;
     bar.replaceChildren();
     const hasTranscript = !!state.transcript;
     const length = (state.info && state.info.lengthSeconds) || 0;
@@ -514,8 +522,8 @@
       placeholder: hasTranscript ? 'Im Video suchen … (Enter = Text, Strg+Enter = KI)' : 'Kein Transkript verfügbar',
       disabled: !hasTranscript,
     });
-    const doLocal = () => { const q = input.value.trim(); if (q) { localSearch(q); } };
-    const doAI = () => { const q = input.value.trim(); if (q) { askAI(q); } };
+    const doLocal = () => { const q = input.value.trim(); if (q) { input.value = ''; localSearch(q); } };
+    const doAI = () => { const q = input.value.trim(); if (q) { input.value = ''; askAI(q); } };
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { if (e.shiftKey || e.ctrlKey || e.metaKey) doAI(); else doLocal(); }
       e.stopPropagation();
@@ -570,6 +578,14 @@
     }
 
     bar.appendChild(el('div', { className: 'yts-status' + (state.error ? ' yts-error' : '') }, [state.status]));
+
+    if (keep && !input.disabled) {
+      input.value = keep.value;
+      if (keep.focused) {
+        input.focus({ preventScroll: true });
+        try { input.setSelectionRange(keep.pos, keep.pos); } catch (e) { /* ignore */ }
+      }
+    }
   }
 
   // ---------- Start ----------
