@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font: 13px/1.5 system-ui, sans-serif; width: 260px; margin: 0; padding: 12px; color: #111; }
+    h1 { font-size: 14px; margin: 0 0 8px; }
+    label { display: flex; gap: 8px; align-items: center; margin: 6px 0; cursor: pointer; }
+    button { width: 100%; margin-top: 10px; padding: 7px; border-radius: 6px; border: 1px solid #bbb; background: #f6f6f6; cursor: pointer; font: inherit; }
+    .warn { color: #b00; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>⏭ YouTube Skipper</h1>
+  <label><input type="checkbox" id="autoSkip"> Auto-Skip</label>
+  <label><input type="checkbox" id="useSponsorBlock"> SponsorBlock-Daten</label>
+  <label><input type="checkbox" id="autoAnalyze"> KI-Analyse automatisch</label>
+  <label><input type="checkbox" id="showPanel"> Panel anzeigen</label>
+  <div id="keyWarn" class="warn" hidden>Kein API-Key hinterlegt – KI-Funktionen inaktiv.</div>
+  <button id="options">Einstellungen öffnen</button>
+  <script src="popup.js"></script>
+</body>
+</html>

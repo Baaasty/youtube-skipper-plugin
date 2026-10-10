@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>YouTube Skipper – Einstellungen</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; max-width: 680px; margin: 32px auto; padding: 0 16px; color: #111; }
+    h1 { font-size: 20px; } h2 { font-size: 15px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    label { display: block; margin: 8px 0; }
+    input[type=text], input[type=password], select { width: 100%; padding: 7px 9px; border: 1px solid #bbb; border-radius: 6px; font: inherit; }
+    .row { display: flex; gap: 12px; align-items: center; }
+    .row label { margin: 0; }
+    .hint { color: #666; font-size: 12px; }
+    button { padding: 7px 14px; border-radius: 6px; border: 1px solid #bbb; background: #f6f6f6; cursor: pointer; font: inherit; }
+    button.primary { background: #cc0000; color: #fff; border-color: #cc0000; }
+    #saved { color: #2a7; margin-left: 10px; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { border-bottom: 1px solid #eee; padding: 4px 6px; text-align: right; } th:first-child, td:first-child { text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>⏭ YouTube Skipper – Einstellungen</h1>
+
+  <h2>KI (Claude API)</h2>
+  <label>Anthropic API-Key
+    <input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off">
+  </label>
+  <p class="hint">Wird nur lokal in dieser Erweiterung gespeichert (chrome.storage.local) und ausschließlich an api.anthropic.com gesendet. Key erstellen: console.anthropic.com → API Keys.</p>
+  <label>Modell
+    <select id="model">
+      <option value="claude-opus-5-5">Claude Opus 5.5 (Standard, beste Qualität – ca. 4 $ / 20 $ pro 1M Tokens)</option>
+      <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (ca. 2 $ / 10 $ pro 1M Tokens)</option>
+      <option value="claude-haiku-5-5">Claude Haiku 5.5 (günstig, ca. 0,10 $ / 0,50 $ pro 1M Tokens)</option>
+    </select>
+  </label>
+  <label><input type="checkbox" id="autoAnalyze"> KI-Analyse automatisch bei jedem Video starten (verursacht pro Video einen API-Aufruf)</label>
+
+  <h2>Automatisches Überspringen</h2>
+  <label><input type="checkbox" id="autoSkip"> Auto-Skip aktivieren</label>
+  <label><input type="checkbox" id="useSponsorBlock"> SponsorBlock-Community-Daten verwenden (kostenlos, sponsor.ajay.app)</label>
+  <p class="hint">Welche Kategorien automatisch übersprungen werden:</p>
+  <div id="categories"></div>
+
+  <h2>Allgemein</h2>
+  <label><input type="checkbox" id="showPanel"> Panel auf der Videoseite anzeigen</label>
+  <label>Bevorzugte Untertitel-Sprache (Code, z. B. <code>de</code>, <code>en</code>; leer = Browsersprache)
+    <input type="text" id="language" placeholder="de">
+  </label>
+
+  <p><button class="primary" id="save">Speichern</button><span id="saved"></span></p>
+
+  <h2>Nutzung &amp; Kosten (geschätzt)</h2>
+  <table id="usage"><thead><tr><th>Modell</th><th>Aufrufe</th><th>Input</th><th>Cache-Lesen</th><th>Output</th><th>≈ USD</th></tr></thead><tbody></tbody></table>
+  <p><button id="clearCache">Analyse-Cache leeren</button> <button id="resetUsage">Statistik zurücksetzen</button> <span id="cacheInfo" class="hint"></span></p>
+
+  <script src="options.js"></script>
+</body>
+</html>

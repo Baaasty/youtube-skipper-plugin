@@ -1,0 +1,74 @@
+#yt-skipper-panel {
+  --yts-bg: var(--yt-spec-badge-chip-background, #f2f2f2);
+  --yts-fg: var(--yt-spec-text-primary, #0f0f0f);
+  --yts-muted: var(--yt-spec-text-secondary, #606060);
+  --yts-accent: #cc0000;
+  --yts-border: var(--yt-spec-10-percent-layer, rgba(0,0,0,.1));
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 13px;
+  color: var(--yts-fg);
+  background: var(--yts-bg);
+  border: 1px solid var(--yts-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+#yt-skipper-panel * { box-sizing: border-box; }
+#yt-skipper-panel .yts-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+#yt-skipper-panel .yts-title { font-weight: 600; font-size: 14px; }
+#yt-skipper-panel .yts-status { color: var(--yts-muted); font-size: 12px; text-align: right; }
+#yt-skipper-panel .yts-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+#yt-skipper-panel button, #yt-skipper-panel input, #yt-skipper-panel select {
+  font: inherit; color: inherit;
+}
+#yt-skipper-panel .yts-btn {
+  border: 1px solid var(--yts-border);
+  background: var(--yt-spec-base-background, #fff);
+  border-radius: 18px;
+  padding: 6px 11px;
+  cursor: pointer;
+  line-height: 1;
+}
+#yt-skipper-panel .yts-btn:hover { background: var(--yts-border); }
+#yt-skipper-panel .yts-btn:disabled { opacity: .5; cursor: default; }
+#yt-skipper-panel .yts-btn.primary { background: var(--yts-accent); color: #fff; border-color: var(--yts-accent); }
+#yt-skipper-panel .yts-btn.primary:hover { background: #a00; }
+#yt-skipper-panel .yts-bar { position: relative; height: 8px; border-radius: 4px; background: var(--yts-border); margin: 8px 0; overflow: hidden; }
+#yt-skipper-panel .yts-bar span { position: absolute; top: 0; bottom: 0; cursor: pointer; }
+#yt-skipper-panel .yts-bar .c-sponsor { background: #2ecc40; }
+#yt-skipper-panel .yts-bar .c-selfpromo { background: #ffff00; }
+#yt-skipper-panel .yts-bar .c-interaction { background: #cc00ff; }
+#yt-skipper-panel .yts-bar .c-intro { background: #00ffff; }
+#yt-skipper-panel .yts-bar .c-outro { background: #0202ed; }
+#yt-skipper-panel .yts-bar .c-preview { background: #008fd6; }
+#yt-skipper-panel .yts-bar .c-filler { background: #7300ff; }
+#yt-skipper-panel .yts-bar .c-music_offtopic { background: #ff9900; }
+#yt-skipper-panel .yts-bar .c-conclusion { background: #ff5e00; }
+#yt-skipper-panel .yts-bar .c-chapter { background: transparent; border-left: 1px solid var(--yts-muted); }
+#yt-skipper-panel .yts-search { display: flex; gap: 6px; margin-top: 8px; }
+#yt-skipper-panel .yts-search input {
+  flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--yts-border); border-radius: 18px;
+  background: var(--yt-spec-base-background, #fff);
+}
+#yt-skipper-panel .yts-results { margin-top: 6px; max-height: 260px; overflow: auto; }
+#yt-skipper-panel .yts-msg { padding: 6px 8px; border-radius: 8px; margin: 4px 0; background: var(--yt-spec-base-background, #fff); border: 1px solid var(--yts-border); }
+#yt-skipper-panel .yts-msg.user { background: transparent; border-style: dashed; color: var(--yts-muted); }
+#yt-skipper-panel .yts-hit { display: flex; gap: 8px; align-items: flex-start; padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+#yt-skipper-panel .yts-hit:hover { background: var(--yts-border); }
+#yt-skipper-panel .yts-time { color: var(--yts-accent); font-variant-numeric: tabular-nums; flex: 0 0 auto; font-weight: 600; }
+#yt-skipper-panel .yts-hit mark { background: #ffe58a; color: inherit; padding: 0 1px; border-radius: 2px; }
+#yt-skipper-panel .yts-chapters { margin: 4px 0; }
+#yt-skipper-panel .yts-chapters .yts-hit { padding: 3px 6px; }
+#yt-skipper-panel details summary { cursor: pointer; color: var(--yts-muted); margin-top: 6px; user-select: none; }
+#yt-skipper-panel .yts-transcript { max-height: 300px; overflow: auto; margin-top: 4px; }
+#yt-skipper-panel .yts-error { color: #c00; }
+#yt-skipper-panel .yts-small { color: var(--yts-muted); font-size: 11px; }
+
+.yts-toast {
+  position: fixed; right: 24px; bottom: 90px; z-index: 2147483647;
+  background: rgba(20,20,20,.94); color: #fff; padding: 10px 14px; border-radius: 10px;
+  font: 13px Roboto, Arial, sans-serif; display: flex; gap: 12px; align-items: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+.yts-toast button { background: #fff; color: #111; border: 0; border-radius: 14px; padding: 4px 10px; cursor: pointer; font: inherit; }
