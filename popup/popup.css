@@ -42,3 +42,4 @@ details summary { cursor: pointer; color: var(--muted); margin-top: 6px; user-se
 .link { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 11px; text-decoration: underline; padding: 2px 4px; }
 .warn { color: #d33; font-size: 12px; margin-top: 8px; }
 #settingsFrame { width: 100%; height: 520px; border: 0; display: block; }
+.stats { color: var(--muted); font-size: 11px; margin-top: 8px; }

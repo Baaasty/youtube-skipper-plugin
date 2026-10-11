@@ -63,3 +63,26 @@
   box-shadow: 0 4px 16px rgba(0,0,0,.4);
 }
 .yts-toast button { background: #fff; color: #111; border: 0; border-radius: 14px; padding: 4px 10px; cursor: pointer; font: inherit; }
+
+/* Marker in der YouTube-Fortschrittsleiste */
+.ytp-progress-bar .yts-markers { position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; z-index: 20; }
+.ytp-progress-bar .yts-markers span { position: absolute; top: 0; bottom: 0; opacity: .75; }
+.ytp-progress-bar .yts-markers .c-sponsor { background: #2ecc40; }
+.ytp-progress-bar .yts-markers .c-selfpromo { background: #ffff00; }
+.ytp-progress-bar .yts-markers .c-interaction { background: #cc00ff; }
+.ytp-progress-bar .yts-markers .c-intro { background: #00ffff; }
+.ytp-progress-bar .yts-markers .c-outro { background: #0202ed; }
+.ytp-progress-bar .yts-markers .c-preview { background: #008fd6; }
+.ytp-progress-bar .yts-markers .c-filler { background: #7300ff; }
+.ytp-progress-bar .yts-markers .c-music_offtopic { background: #ff9900; }
+.ytp-progress-bar .yts-markers .c-conclusion { background: #ff5e00; }
+
+/* Überspringen-Knopf im Player */
+.yts-skip-btn {
+  position: absolute; right: 12px; bottom: 64px; z-index: 60;
+  background: rgba(0,0,0,.8); color: #fff; border: 1px solid rgba(255,255,255,.6); border-radius: 4px;
+  padding: 10px 14px; font: 500 14px Roboto, Arial, sans-serif; cursor: pointer;
+}
+.yts-skip-btn:hover { background: #000; border-color: #fff; }
+.yts-skip-btn[hidden] { display: none; }
+.ytp-autohide .yts-skip-btn { bottom: 24px; }

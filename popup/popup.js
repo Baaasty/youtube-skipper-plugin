@@ -169,8 +169,18 @@ $('askAI').addEventListener('click', doAI);
 $('analyze').addEventListener('click', () => act({ type: 'ui:analyze', force: !!(snap && snap.hasAnalysis) }));
 for (const b of document.querySelectorAll('[data-jump]')) b.addEventListener('click', () => act({ type: 'ui:jump', action: b.dataset.jump }));
 
+async function renderStats() {
+  const { skipStats = { count: 0, seconds: 0 } } = await chrome.storage.local.get('skipStats');
+  const min = Math.round(skipStats.seconds / 60);
+  $('stats').textContent = skipStats.count
+    ? `⏱ ${min < 1 ? Math.round(skipStats.seconds) + ' s' : min + ' min'} gespart · ${skipStats.count} Segmente übersprungen · Tastenkürzel: Alt+S Sponsor, Alt+I Intro, Alt+F Fazit, Alt+K Suche`
+    : 'Tastenkürzel: Alt+S Sponsor, Alt+I Intro, Alt+F Fazit, Alt+K Suche (änderbar unter chrome://extensions/shortcuts)';
+}
+
 // ---------- Start ----------
 (async () => {
+  renderStats();
+  chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch.skipStats) renderStats(); });
   const { apiKey = '' } = await chrome.storage.local.get('apiKey');
   $('keyWarn').hidden = !!apiKey;
   chrome.storage.onChanged.addListener((ch, area) => { if (area === 'local' && ch.apiKey) $('keyWarn').hidden = !!ch.apiKey.newValue; });

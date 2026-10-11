@@ -58,6 +58,7 @@
   function checkNavigation() {
     // Leiste neu einhängen, falls YouTube den Bereich unter dem Video neu aufgebaut hat.
     if (state && settings.showBar && bar && !document.contains(bar)) { bar = null; render(); }
+    if (state && state.segments.length && !document.querySelector('#movie_player .ytp-progress-bar .yts-markers')) renderMarkers();
     if (location.href === lastUrl) return;
     lastUrl = location.href;
     const id = getVideoId();
@@ -69,6 +70,9 @@
   function teardown() {
     if (state && state.video) state.video.removeEventListener('timeupdate', onTimeUpdate);
     state = null;
+    const markers = document.querySelector('#movie_player .yts-markers');
+    if (markers) markers.remove();
+    if (skipBtn) { skipBtn.remove(); skipBtn = null; }
     if (bar) bar.remove();
     bar = null;
     notifyPopup();
@@ -205,8 +209,9 @@
     state.info = info;
     attachVideo();
 
-    state.chapters = L.parseDescriptionChapters(info.description, info.lengthSeconds);
+    state.chapters = chaptersFromInfo(info);
     addSegments(L.chaptersToSegments(state.chapters, 'chapters'));
+    renderMarkers();
 
     if (settings.useSponsorBlock) {
       sendMessage({ type: 'sponsorblock', videoId }).then((res) => {
@@ -234,6 +239,18 @@
     }
   }
 
+  function chaptersFromInfo(info) {
+    const yt = info.ytChapters && Array.isArray(info.ytChapters.chapters) ? info.ytChapters.chapters : [];
+    const sorted = yt.filter((c) => Number.isFinite(c.start)).sort((a, b) => a.start - b.start);
+    if (sorted.length >= 2) {
+      return sorted.map((c, i) => ({
+        start: c.start, title: c.title || `Kapitel ${i + 1}`,
+        end: i + 1 < sorted.length ? sorted[i + 1].start : info.lengthSeconds,
+      }));
+    }
+    return L.parseDescriptionChapters(info.description, info.lengthSeconds);
+  }
+
   function attachVideo() {
     const v = document.querySelector('video.html5-main-video') || document.querySelector('video');
     if (!v) { setTimeout(attachVideo, 500); return; }
@@ -247,6 +264,64 @@
   function addSegments(segs) {
     if (!state || !segs || !segs.length) return;
     state.segments = L.mergeSegments([state.segments, segs]);
+    renderMarkers();
+  }
+
+  const SKIPPABLE = ['sponsor', 'selfpromo', 'interaction', 'intro', 'outro', 'preview', 'filler', 'music_offtopic'];
+
+  // ---------- Statistik: gesparte Zeit ----------
+  async function recordSkip(seg) {
+    try {
+      const { skipStats = { count: 0, seconds: 0 } } = await chrome.storage.local.get('skipStats');
+      skipStats.count += 1;
+      skipStats.seconds += Math.max(0, seg.end - seg.start);
+      await chrome.storage.local.set({ skipStats });
+    } catch (e) { /* ignore */ }
+  }
+
+  function skipSegment(seg, undoable) {
+    state.skipped.add(seg.category + '@' + seg.start.toFixed(1));
+    seek(seg.end);
+    recordSkip(seg);
+    const label = L.CATEGORY_LABELS[seg.category] || seg.category;
+    showToast(`${label} übersprungen (${L.formatTime(seg.start)} – ${L.formatTime(seg.end)})`,
+      undoable ? { label: 'Rückgängig', onClick: () => seek(seg.start) } : null);
+  }
+
+  // ---------- Marker in der YouTube-Fortschrittsleiste ----------
+  function renderMarkers() {
+    if (!state || !state.info || !state.info.lengthSeconds) return;
+    const barEl = document.querySelector('#movie_player .ytp-progress-bar');
+    if (!barEl) return;
+    let host = barEl.querySelector('.yts-markers');
+    if (!host) { host = document.createElement('div'); host.className = 'yts-markers'; barEl.appendChild(host); }
+    host.replaceChildren();
+    const len = state.info.lengthSeconds;
+    for (const s of state.segments) {
+      if (s.category === 'chapter') continue;
+      const m = document.createElement('span');
+      m.className = 'c-' + s.category;
+      m.style.left = (s.start / len * 100) + '%';
+      m.style.width = Math.max(0.2, (s.end - s.start) / len * 100) + '%';
+      m.title = `${L.CATEGORY_LABELS[s.category] || s.category} ${L.formatTime(s.start)} – ${L.formatTime(s.end)}`;
+      host.appendChild(m);
+    }
+  }
+
+  // ---------- Überspringen-Knopf im Player ----------
+  let skipBtn = null;
+  function updateSkipButton(t) {
+    const player = document.getElementById('movie_player');
+    if (!player) return;
+    const seg = state.segments.find((s) => SKIPPABLE.includes(s.category) && t >= s.start && t < s.end - 0.5);
+    if (!seg) { if (skipBtn) skipBtn.hidden = true; return; }
+    if (!skipBtn || !document.contains(skipBtn)) {
+      skipBtn = el('button', { className: 'yts-skip-btn', onclick: () => { if (skipBtn._seg) skipSegment(skipBtn._seg, true); } });
+      player.appendChild(skipBtn);
+    }
+    skipBtn._seg = seg;
+    skipBtn.textContent = `${L.CATEGORY_LABELS[seg.category] || seg.category} überspringen ⏭`;
+    skipBtn.hidden = false;
   }
 
   function setStatus(text, isError) {
@@ -259,20 +334,19 @@
 
   // ---------- Auto-Skip ----------
   function onTimeUpdate() {
-    if (!state || !state.video || !settings.autoSkip) return;
+    if (!state || !state.video) return;
     const t = state.video.currentTime;
-    for (const s of state.segments) {
-      if (!settings.skipCategories[s.category]) continue;
-      if (t >= s.start && t < s.end - 0.3) {
-        const key = s.category + '@' + s.start.toFixed(1);
-        if (state.skipped.has(key)) continue;
-        state.skipped.add(key);
-        seek(s.end);
-        showToast(`${L.CATEGORY_LABELS[s.category] || s.category} übersprungen (${L.formatTime(s.start)} – ${L.formatTime(s.end)})`,
-          { label: 'Rückgängig', onClick: () => seek(s.start) });
-        break;
+    if (settings.autoSkip) {
+      for (const s of state.segments) {
+        if (!settings.skipCategories[s.category]) continue;
+        if (t >= s.start && t < s.end - 0.3) {
+          if (state.skipped.has(s.category + '@' + s.start.toFixed(1))) continue;
+          skipSegment(s, true);
+          return;
+        }
       }
     }
+    updateSkipButton(t);
   }
 
   function showToast(text, action) {
@@ -305,8 +379,7 @@
     if (j.mode === 'skip') {
       const seg = L.findNextSegment(state.segments, j.cats, currentTime());
       if (!seg) { setStatus(`Kein ${j.label}-Segment bekannt – ggf. KI-Analyse starten.`); return; }
-      seek(seg.end);
-      showToast(`${j.label} übersprungen → ${L.formatTime(seg.end)}`);
+      skipSegment(seg, false);
     } else {
       // Erste Kategorie bevorzugen (Fazit vor Outro).
       let seg = null;
@@ -427,7 +500,19 @@
       case 'ui:analyze': await runAnalysis(!!msg.force); return snapshot();
       case 'ui:jump': jump(msg.action); return snapshot();
       case 'ui:clearChat': if (state) state.chat = []; render(); return snapshot();
+      case 'ui:command': runCommand(msg.command); return snapshot();
       default: throw new Error('Unbekannt: ' + msg.type);
+    }
+  }
+
+  function runCommand(command) {
+    if (!state) return;
+    if (command === 'skip-sponsor') jump('sponsor');
+    else if (command === 'skip-intro') jump('intro');
+    else if (command === 'jump-conclusion') jump('conclusion');
+    else if (command === 'focus-search') {
+      const input = bar && bar.querySelector('.yts-input');
+      if (input) { input.scrollIntoView({ block: 'center', behavior: 'smooth' }); input.focus(); input.select(); }
     }
   }
 

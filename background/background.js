@@ -257,3 +257,10 @@ async function recordUsage(model, usage) {
   usageTotals[model] = u;
   await chrome.storage.local.set({ usageTotals });
 }
+
+// ---------- Tastenkürzel (chrome://extensions/shortcuts) ----------
+chrome.commands.onCommand.addListener(async (command) => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !/^https:\/\/www\.youtube\.com\/watch/.test(tab.url || '')) return;
+  chrome.tabs.sendMessage(tab.id, { type: 'ui:command', command }, () => { void chrome.runtime.lastError; });
+});

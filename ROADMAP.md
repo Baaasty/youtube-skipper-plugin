@@ -11,13 +11,13 @@ Stand wird mit jedem Push aktualisiert. `[x]` = fertig und auf `main`, `[ ]` = o
 - [x] Auto-Skip mit Toast und „Rückgängig“, Analyse-Cache pro Video, Nutzungs-/Kostenstatistik
 - [x] README mit Machbarkeit, APIs, Kosten, Lizenz
 
-## v0.2 – Player-Integration
+## v0.2 – Player-Integration (fertig)
 
-- [ ] Segmentmarker direkt in der YouTube-Fortschrittsleiste (farbig wie SponsorBlock)
-- [ ] „Überspringen“-Knopf im Player, sobald man sich in einem bekannten Segment befindet (auch für Kategorien ohne Auto-Skip)
-- [ ] Tastenkürzel: Sponsor skippen, Intro skippen, zum Fazit, Suchfeld fokussieren (konfigurierbar unter `chrome://extensions/shortcuts`)
-- [ ] Kapitel aus YouTubes eigener Kapitelleiste (auch automatisch erzeugte), nicht nur aus der Beschreibung
-- [ ] Statistik „gesparte Zeit“ und übersprungene Segmente im Popup
+- [x] Segmentmarker direkt in der YouTube-Fortschrittsleiste (farbig wie SponsorBlock)
+- [x] „Überspringen“-Knopf im Player, sobald man sich in einem bekannten Segment befindet (auch für Kategorien ohne Auto-Skip)
+- [x] Tastenkürzel: Sponsor skippen, Intro skippen, zum Fazit, Suchfeld fokussieren (konfigurierbar unter `chrome://extensions/shortcuts`)
+- [x] Kapitel aus YouTubes eigener Kapitelleiste (auch automatisch erzeugte), nicht nur aus der Beschreibung
+- [x] Statistik „gesparte Zeit“ und übersprungene Segmente im Popup
 
 ## v0.3 – Komfort und Kosten
 

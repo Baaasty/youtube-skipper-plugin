@@ -42,6 +42,41 @@
     return '';
   }
 
+  // Kapitel aus YouTubes eigener Kapitelleiste (manuell oder automatisch erzeugt).
+  function walk(obj, visit, depth) {
+    if (!obj || typeof obj !== 'object' || depth > 40) return;
+    visit(obj);
+    if (Array.isArray(obj)) { for (const v of obj) walk(v, visit, depth + 1); return; }
+    for (const k in obj) { const v = obj[k]; if (v && typeof v === 'object') walk(v, visit, depth + 1); }
+  }
+
+  function findYtChapters(videoId) {
+    const sources = [];
+    try { const app = document.querySelector('ytd-app'); if (app && app.data) sources.push(app.data); } catch (e) { /* ignore */ }
+    if (window.ytInitialData) sources.push(window.ytInitialData);
+    for (const src of sources) {
+      const found = {};
+      let current = '';
+      walk(src, (o) => {
+        if (!current && o.currentVideoEndpoint && o.currentVideoEndpoint.watchEndpoint) current = o.currentVideoEndpoint.watchEndpoint.videoId || '';
+        if (Array.isArray(o.markersMap)) {
+          for (const m of o.markersMap) {
+            const ch = m && m.value && m.value.chapters;
+            if (!Array.isArray(ch) || !ch.length) continue;
+            found[m.key || 'CHAPTERS'] = ch.map((c) => c.chapterRenderer).filter(Boolean).map((c) => ({
+              title: (c.title && (c.title.simpleText || (c.title.runs || []).map((r) => r.text).join(''))) || '',
+              start: (Number(c.timeRangeStartMillis) || 0) / 1000,
+            }));
+          }
+        }
+      }, 0);
+      if (current && videoId && current !== videoId) continue;
+      const list = found.DESCRIPTION_CHAPTERS || found.AUTO_CHAPTERS || Object.values(found)[0];
+      if (list && list.length) return { chapters: list, auto: !found.DESCRIPTION_CHAPTERS };
+    }
+    return null;
+  }
+
   function ytcfgGet(key) {
     try { return window.ytcfg && typeof window.ytcfg.get === 'function' ? window.ytcfg.get(key) : undefined; } catch (e) { return undefined; }
   }
@@ -66,6 +101,7 @@
           name: trackName(t),
         })),
         transcriptParams: findTranscriptParams(r.videoDetails.videoId),
+        ytChapters: findYtChapters(r.videoDetails.videoId),
         clientVersion: ytcfgGet('INNERTUBE_CLIENT_VERSION') || '',
         apiKey: ytcfgGet('INNERTUBE_API_KEY') || '',
       };

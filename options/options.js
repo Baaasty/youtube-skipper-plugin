@@ -84,12 +84,18 @@ async function renderUsage() {
   const all = await chrome.storage.local.get(null);
   const n = Object.keys(all).filter((k) => k.startsWith('analysis:')).length;
   $('cacheInfo').textContent = `${n} Video-Analysen im Cache`;
+  const st = all.skipStats || { count: 0, seconds: 0 };
+  $('skipStats').textContent = `Übersprungen: ${st.count} Segmente, ${Math.round(st.seconds / 60)} Minuten gespart.`;
 }
 
 $('save').addEventListener('click', save);
 if (new URLSearchParams(location.search).get('embed') === '1') document.body.classList.add('embed');
 $('clearCache').addEventListener('click', async () => {
   await chrome.runtime.sendMessage({ type: 'clearCache' });
+  await renderUsage();
+});
+$('resetSkipStats').addEventListener('click', async () => {
+  await chrome.storage.local.remove('skipStats');
   await renderUsage();
 });
 $('resetUsage').addEventListener('click', async () => {

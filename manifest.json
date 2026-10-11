@@ -1,10 +1,12 @@
 {
   "manifest_version": 3,
   "name": "YouTube Skipper",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Intro skippen, zum Fazit springen, Sponsor-Segmente automatisch überspringen und Stellen im Video per Text oder KI finden – auf Basis des Transkripts.",
   "minimum_chrome_version": "111",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://sponsor.ajay.app/*",
@@ -15,19 +17,33 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["content/main-world.js"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content/main-world.js"
+      ],
       "world": "MAIN",
       "run_at": "document_start"
     },
     {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["content/lib.js", "content/content.js"],
-      "css": ["content/panel.css"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content/lib.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/panel.css"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "options_ui": { "page": "options/options.html", "open_in_tab": true },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "YouTube Skipper",
@@ -43,5 +59,31 @@
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "commands": {
+    "skip-sponsor": {
+      "suggested_key": {
+        "default": "Alt+S"
+      },
+      "description": "Sponsor/Eigenwerbung überspringen"
+    },
+    "skip-intro": {
+      "suggested_key": {
+        "default": "Alt+I"
+      },
+      "description": "Intro überspringen"
+    },
+    "jump-conclusion": {
+      "suggested_key": {
+        "default": "Alt+F"
+      },
+      "description": "Zum Fazit springen"
+    },
+    "focus-search": {
+      "suggested_key": {
+        "default": "Alt+K"
+      },
+      "description": "Suchfeld im Video fokussieren"
+    }
   }
 }
