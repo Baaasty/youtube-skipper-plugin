@@ -27,12 +27,12 @@ Stand wird mit jedem Push aktualisiert. `[x]` = fertig und auf `main`, `[ ]` = o
 - [x] Zweisprachiges UI (Deutsch/Englisch) über `chrome.i18n`
 - [x] Segment-Korrektur: einzelnes Segment für dieses Video ignorieren
 
-## v0.4 – Release-Reife
+## v0.4 – Release-Reife (fertig)
 
-- [ ] Build-Skript, das ein Store-fähiges ZIP erzeugt
-- [ ] GitHub Action, die bei Tags das ZIP als Release-Artefakt anhängt
-- [ ] PRIVACY.md (Datenschutzerklärung für Store-Listing) und CHANGELOG.md
-- [ ] README-Abschnitt „Verkaufsmodell“: Backend-Proxy mit Nutzerkonten und Kontingent (Konzept)
+- [x] Build-Skript, das ein Store-fähiges ZIP erzeugt
+- [x] GitHub Action, die bei Tags das ZIP als Release-Artefakt anhängt
+- [x] PRIVACY.md (Datenschutzerklärung für Store-Listing) und CHANGELOG.md
+- [x] README-Abschnitt „Verkaufsmodell“: Backend-Proxy mit Nutzerkonten und Kontingent (Konzept)
 
 ## Ideen, nicht eingeplant
 

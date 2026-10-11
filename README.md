@@ -91,6 +91,8 @@ popup/                     Toolbar-Popup mit Tabs „Suche“ (Chat, Sprungknöp
 options/                   Einstellungsseite (im Popup eingebettet, auch als eigene Seite)
 test/lib.test.mjs          Unit-Tests (node --test)
 test/e2e.mjs               End-to-End-Test mit Playwright und gemockter YouTube-Seite
+scripts/build.mjs          ZIP-Build ohne Abhängigkeiten
+.github/workflows/         CI und Release
 ```
 
 Transkript-Abruf: 1) Untertitelspur aus der Player-Antwort (`fmt=json3`), bevorzugt manuelle Spur in der eingestellten Sprache, sonst automatische; 2) Fallback auf den internen `get_transcript`-Endpunkt.
@@ -103,8 +105,20 @@ Claude-Aufrufe gehen direkt aus dem Service Worker an `api.anthropic.com` (ohne 
 npm test
 ```
 
-## 7. Bekannte Grenzen / Ideen
+## 7. Verkaufsmodell (Konzept)
+
+Für den Privatgebrauch trägt jeder Nutzer seinen eigenen Anthropic-Key ein. Für ein verkauftes Produkt gehört der Key nicht in die Extension, sondern hinter einen kleinen Backend-Proxy:
+
+1. **Login** in der Extension (z. B. E-Mail-Link oder Google), der Proxy gibt ein kurzlebiges Token zurück.
+2. **Proxy-Endpunkt** `/analyze` und `/ask`: nimmt Transkript und Frage entgegen, ruft die Claude API mit dem Firmen-Key auf, gibt das JSON zurück. Die Extension spricht dann nur noch mit dem Proxy; `background.js` braucht dafür nur eine andere URL und das Token statt des API-Keys.
+3. **Kontingent pro Nutzer** (z. B. 50 Analysen/Monat im Basis-Abo, mehr im Premium-Abo). Die Token-Zahlen aus `usage` jeder Antwort reichen zur Abrechnung.
+4. **Preisgestaltung:** Mit Haiku 5.5 kostet ein aktiver Nutzer unter 0,50 $/Monat, mit Opus 5.5 rund 10 $/Monat (10 Analysen + 5 Fragen pro Tag). Ein Basis-Abo um 3 €/Monat auf Haiku und ein Premium-Abo um 8 €/Monat auf Opus/Sonnet lassen Marge.
+5. **SponsorBlock** bleibt wegen der Lizenz (CC BY-NC-SA) im kommerziellen Produkt aus oder wird lizenziert; die KI-Erkennung übernimmt.
+
+Für den Chrome Web Store sind `PRIVACY.md` als Datenschutzerklärung und `node scripts/build.mjs` für das Upload-ZIP vorgesehen.
+
+## 8. Bekannte Grenzen / Ideen
 
 - Shorts und Livestreams werden nicht unterstützt.
 - Die KI-Zeitangaben sind so genau wie die Transkriptblöcke (ca. 10 s); für sekundengenaues Sponsor-Skipping sind SponsorBlock-Daten besser.
-- Mögliche Erweiterungen: Segmentmarker direkt in der YouTube-Fortschrittsleiste, Tastenkürzel, eigener Backend-Proxy für ein Abo-Modell, Whisper-Transkription für Videos ohne Untertitel.
+- Mögliche Erweiterungen: Whisper-Transkription für Videos ohne Untertitel, Backend-Proxy für ein Abo-Modell (siehe Abschnitt 7). Der Stand der Planung steht in `ROADMAP.md`.

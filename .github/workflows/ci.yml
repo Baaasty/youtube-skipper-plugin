@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: for f in background/*.js content/*.js popup/*.js options/*.js scripts/*.mjs; do node --check "$f"; done
+      - name: Manifest und Sprachdateien
+        run: node -e "for (const f of ['manifest.json','_locales/de/messages.json','_locales/en/messages.json']) JSON.parse(require('fs').readFileSync(f,'utf8'))"
+      - name: Unit-Tests
+        run: npm test
+      - name: Build
+        run: node scripts/build.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: dist/*.zip
