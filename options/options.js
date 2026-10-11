@@ -1,15 +1,14 @@
 'use strict';
 
-const CATEGORIES = [
-  ['sponsor', 'Sponsor (bezahlte Werbung)'],
-  ['selfpromo', 'Eigenwerbung (Merch, Kurse, Patreon)'],
-  ['interaction', 'Like/Abo-Aufrufe'],
-  ['intro', 'Intro'],
-  ['outro', 'Outro / Abspann'],
-  ['preview', 'Vorschau / Recap'],
-  ['filler', 'Füller / Abschweifungen'],
-  ['music_offtopic', 'Musik (Off-Topic, SponsorBlock)'],
-];
+const L = globalThis.YTSkipperLib;
+const t = L.t;
+const CATEGORIES = ['sponsor', 'selfpromo', 'interaction', 'intro', 'outro', 'preview', 'filler', 'music_offtopic'];
+
+function applyI18n() {
+  for (const n of document.querySelectorAll('[data-i18n]')) n.textContent = t(n.dataset.i18n);
+  document.title = t('opt_title');
+}
+applyI18n();
 
 const DEFAULTS = {
   autoSkip: true, useSponsorBlock: true, autoAnalyze: false, showBar: true, language: '',
@@ -22,11 +21,11 @@ const $ = (id) => document.getElementById(id);
 function renderCategories(selected) {
   const box = $('categories');
   box.replaceChildren();
-  for (const [key, label] of CATEGORIES) {
+  for (const key of CATEGORIES) {
     const l = document.createElement('label');
     const cb = document.createElement('input');
     cb.type = 'checkbox'; cb.dataset.cat = key; cb.checked = !!selected[key];
-    l.append(cb, ' ', label);
+    l.append(cb, ' ', t('opt_cat_' + key));
     box.appendChild(l);
   }
 }
@@ -62,7 +61,7 @@ async function save() {
   };
   await chrome.storage.sync.set({ settings });
   await chrome.storage.local.set({ apiKey: $('apiKey').value.trim() });
-  $('saved').textContent = 'Gespeichert ✓';
+  $('saved').textContent = t('opt_saved');
   setTimeout(() => { $('saved').textContent = ''; }, 2000);
 }
 
@@ -81,13 +80,13 @@ async function renderUsage() {
   }
   if (!tbody.childElementCount) {
     const tr = document.createElement('tr'); const td = document.createElement('td');
-    td.colSpan = 6; td.textContent = 'Noch keine API-Aufrufe.'; tr.appendChild(td); tbody.appendChild(tr);
+    td.colSpan = 6; td.textContent = t('opt_no_calls'); tr.appendChild(td); tbody.appendChild(tr);
   }
   const all = await chrome.storage.local.get(null);
   const n = Object.keys(all).filter((k) => k.startsWith('analysis:')).length;
-  $('cacheInfo').textContent = `${n} Video-Analysen im Cache`;
+  $('cacheInfo').textContent = t('opt_cache_info', n);
   const st = all.skipStats || { count: 0, seconds: 0 };
-  $('skipStats').textContent = `Übersprungen: ${st.count} Segmente, ${Math.round(st.seconds / 60)} Minuten gespart.`;
+  $('skipStats').textContent = t('opt_skip_stats', [st.count, Math.round(st.seconds / 60)]);
 }
 
 $('save').addEventListener('click', save);

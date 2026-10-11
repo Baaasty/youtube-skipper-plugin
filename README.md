@@ -75,6 +75,8 @@ Alternative ohne Transkript-Scraping: Google Gemini kann YouTube-URLs direkt als
 - **Auto-Skip** überspringt die gewählten Kategorien automatisch, mit Toast und „Rückgängig“.
 - **✨ Analyse** erkennt Kapitel, Intro, Sponsor, Eigenwerbung, Fazit und Outro per Claude und schreibt eine Kurzzusammenfassung. Ergebnis wird pro Video gecacht.
 
+Die Oberfläche ist zweisprachig (Deutsch/Englisch) und folgt der Browsersprache. Tastenkürzel Alt+S (Sponsor), Alt+I (Intro), Alt+F (Fazit), Alt+K (Suchfeld) lassen sich unter `chrome://extensions/shortcuts` ändern.
+
 ## 5. Aufbau
 
 ```
@@ -84,6 +86,7 @@ content/lib.js             reine Logik: Kapitel-Parser, Transkript-Kompaktierung
 content/content.js         Suchleiste unter dem Video, Transkript-Abruf, Auto-Skip, Zustand fürs Popup
 content/panel.css          Styles
 background/background.js   Service Worker: SponsorBlock, Claude-API (JSON-Schema-Antworten, Prompt-Caching), Cache, Statistik
+_locales/de, _locales/en  Sprachdateien (chrome.i18n)
 popup/                     Toolbar-Popup mit Tabs „Suche“ (Chat, Sprungknöpfe) und „Einstellungen“
 options/                   Einstellungsseite (im Popup eingebettet, auch als eigene Seite)
 test/lib.test.mjs          Unit-Tests (node --test)

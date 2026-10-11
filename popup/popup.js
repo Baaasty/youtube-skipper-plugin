@@ -1,6 +1,14 @@
 'use strict';
 const L = globalThis.YTSkipperLib;
+const t = L.t;
 const $ = (id) => document.getElementById(id);
+
+function applyI18n() {
+  for (const n of document.querySelectorAll('[data-i18n]')) n.textContent = t(n.dataset.i18n);
+  for (const n of document.querySelectorAll('[data-i18n-placeholder]')) n.placeholder = t(n.dataset.i18nPlaceholder);
+  for (const n of document.querySelectorAll('[data-i18n-title]')) n.title = t(n.dataset.i18nTitle);
+}
+applyI18n();
 
 let tabId = null;
 let snap = null;
@@ -99,8 +107,8 @@ function hitRow(start, label, highlight) {
 function copyButton(label, getText) {
   const b = el('button', { className: 'chip small' }, [label]);
   b.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(getText()); b.textContent = 'Kopiert ✓'; }
-    catch (e) { b.textContent = 'Kopieren fehlgeschlagen'; }
+    try { await navigator.clipboard.writeText(getText()); b.textContent = t('copied'); }
+    catch (e) { b.textContent = t('copy_failed'); }
     setTimeout(() => { b.textContent = label; }, 1500);
   });
   return b;
@@ -116,7 +124,7 @@ function render() {
   $('video').hidden = !ok;
   if (!ok) return;
 
-  $('title').textContent = snap.title || 'Video';
+  $('title').textContent = snap.title || t('video');
   $('title').title = snap.title || '';
   $('status').textContent = snap.status || '';
   $('status').classList.toggle('error', !!snap.error);
@@ -129,14 +137,14 @@ function render() {
       const width = Math.max(0.4, ((s.end - s.start) / snap.lengthSeconds) * 100);
       tl.appendChild(el('span', {
         className: 'c-' + s.category, style: `left:${left}%;width:${width}%`,
-        title: `${L.CATEGORY_LABELS[s.category] || s.category}${s.title ? ': ' + s.title : ''} (${L.formatTime(s.start)} – ${L.formatTime(s.end)})`,
+        title: `${L.categoryLabel(s.category)}${s.title ? ': ' + s.title : ''} (${L.formatTime(s.start)} – ${L.formatTime(s.end)})`,
         onclick: () => send({ type: 'ui:seek', t: s.start }),
       }));
     }
   }
 
   for (const b of document.querySelectorAll('[data-jump]')) b.disabled = !snap.jumps[b.dataset.jump];
-  $('analyze').textContent = snap.busy ? '… Analyse' : (snap.hasAnalysis ? '🔄 Analyse' : '✨ Analyse');
+  $('analyze').textContent = (snap.busy ? '…' : (snap.hasAnalysis ? '🔄' : '✨')) + ' ' + t('btn_analyze');
   $('query').disabled = !snap.hasTranscript;
   $('searchLocal').disabled = !snap.hasTranscript;
   setBusy(snap.busy);
@@ -148,44 +156,44 @@ function render() {
     for (const h of m.matches || []) box.appendChild(hitRow(h.start, h.label, m.highlight));
     chat.appendChild(box);
   }
-  if (snap.chat.length) chat.appendChild(el('button', { className: 'link', onclick: () => act({ type: 'ui:clearChat' }) }, ['Verlauf leeren']));
+  if (snap.chat.length) chat.appendChild(el('button', { className: 'link', onclick: () => act({ type: 'ui:clearChat' }) }, [t('btn_clear_chat')]));
   chat.scrollTop = chat.scrollHeight;
 
   const extras = $('extras');
   extras.replaceChildren();
-  if (snap.summary) extras.appendChild(el('details', null, [el('summary', null, ['Zusammenfassung (KI)']), el('div', { className: 'msg' }, [snap.summary])]));
+  if (snap.summary) extras.appendChild(el('details', null, [el('summary', null, [t('summary_ai')]), el('div', { className: 'msg' }, [snap.summary])]));
   if (snap.chapters.length) {
     const list = el('div', { className: 'chapters' });
     for (const c of snap.chapters) list.appendChild(hitRow(c.start, c.title));
-    list.appendChild(copyButton('Kapitel kopieren (YouTube-Format)', () => L.chaptersToDescription(snap.chapters)));
-    extras.appendChild(el('details', null, [el('summary', null, [`Kapitel (${snap.chapters.length})`]), list]));
+    list.appendChild(copyButton(t('copy_chapters'), () => L.chaptersToDescription(snap.chapters)));
+    extras.appendChild(el('details', null, [el('summary', null, [t('chapters_n', snap.chapters.length)]), list]));
   }
   const segs = snap.segments.filter((s) => s.category !== 'chapter');
   if (segs.length) {
     const list = el('div', { className: 'chapters' });
     for (const s of segs) {
-      const row = hitRow(s.start, `${L.CATEGORY_LABELS[s.category] || s.category} bis ${L.formatTime(s.end)}${s.title ? ' · ' + s.title : ''} (${s.source})`);
+      const row = hitRow(s.start, t('seg_until', [L.categoryLabel(s.category), L.formatTime(s.end)]) + (s.title ? ' · ' + s.title : '') + ` (${s.source})`);
       row.appendChild(el('button', {
-        className: 'x', title: 'Dieses Segment für dieses Video ignorieren',
+        className: 'x', title: t('tip_ignore'),
         onclick: (e) => { e.stopPropagation(); act({ type: 'ui:ignoreSegment', key: L.segmentKey(s) }); },
       }, ['✕']));
       list.appendChild(row);
     }
-    extras.appendChild(el('details', null, [el('summary', null, [`Segmente (${segs.length})`]), list]));
+    extras.appendChild(el('details', null, [el('summary', null, [t('segments_n', segs.length)]), list]));
   }
   if (snap.transcript && snap.transcript.length) {
     const list = el('div', { className: 'transcript' });
-    const det = el('details', null, [el('summary', null, ['Transkript']), list]);
+    const det = el('details', null, [el('summary', null, [t('transcript')]), list]);
     det.addEventListener('toggle', () => {
       if (det.open && !list.childElementCount) {
-        list.appendChild(copyButton('Transkript kopieren', () => snap.transcript.map((b) => `[${L.formatTime(b.start)}] ${b.text}`).join('\n')));
+        list.appendChild(copyButton(t('copy_transcript'), () => snap.transcript.map((b) => `[${L.formatTime(b.start)}] ${b.text}`).join('\n')));
         for (const b of snap.transcript) list.appendChild(hitRow(b.start, b.text));
       }
     });
     extras.appendChild(det);
   }
   if (snap.costEstimate && !snap.hasAnalysis) {
-    extras.appendChild(el('div', { className: 'stats' }, ['KI-Analyse ' + snap.costEstimate]));
+    extras.appendChild(el('div', { className: 'stats' }, [t('analysis_cost', snap.costEstimate)]));
   }
 }
 
@@ -202,9 +210,8 @@ for (const b of document.querySelectorAll('[data-jump]')) b.addEventListener('cl
 async function renderStats() {
   const { skipStats = { count: 0, seconds: 0 } } = await chrome.storage.local.get('skipStats');
   const min = Math.round(skipStats.seconds / 60);
-  $('stats').textContent = skipStats.count
-    ? `⏱ ${min < 1 ? Math.round(skipStats.seconds) + ' s' : min + ' min'} gespart · ${skipStats.count} Segmente übersprungen · Tastenkürzel: Alt+S Sponsor, Alt+I Intro, Alt+F Fazit, Alt+K Suche`
-    : 'Tastenkürzel: Alt+S Sponsor, Alt+I Intro, Alt+F Fazit, Alt+K Suche (änderbar unter chrome://extensions/shortcuts)';
+  const saved = min < 1 ? t('unit_s', Math.round(skipStats.seconds)) : t('unit_min', min);
+  $('stats').textContent = (skipStats.count ? t('stats_saved', [saved, skipStats.count]) + ' · ' : '') + t('shortcuts_hint');
 }
 
 // ---------- Start ----------

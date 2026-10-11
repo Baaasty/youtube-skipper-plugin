@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "YouTube Skipper",
+  "name": "__MSG_extName__",
   "version": "0.2.0",
-  "description": "Intro skippen, zum Fazit springen, Sponsor-Segmente automatisch überspringen und Stellen im Video per Text oder KI finden – auf Basis des Transkripts.",
+  "description": "__MSG_extDescription__",
   "minimum_chrome_version": "111",
   "permissions": [
     "storage"
@@ -65,25 +65,26 @@
       "suggested_key": {
         "default": "Alt+S"
       },
-      "description": "Sponsor/Eigenwerbung überspringen"
+      "description": "__MSG_cmdSkipSponsor__"
     },
     "skip-intro": {
       "suggested_key": {
         "default": "Alt+I"
       },
-      "description": "Intro überspringen"
+      "description": "__MSG_cmdSkipIntro__"
     },
     "jump-conclusion": {
       "suggested_key": {
         "default": "Alt+F"
       },
-      "description": "Zum Fazit springen"
+      "description": "__MSG_cmdJumpConclusion__"
     },
     "focus-search": {
       "suggested_key": {
         "default": "Alt+K"
       },
-      "description": "Suchfeld im Video fokussieren"
+      "description": "__MSG_cmdFocusSearch__"
     }
-  }
+  },
+  "default_locale": "de"
 }

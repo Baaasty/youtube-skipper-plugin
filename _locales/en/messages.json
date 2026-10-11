@@ -1,0 +1,371 @@
+{
+  "extName": {
+    "message": "YouTube Skipper"
+  },
+  "extDescription": {
+    "message": "Skip intros, jump to the conclusion, auto-skip sponsor segments and find moments in a video by text or AI – based on the transcript."
+  },
+  "cmdSkipSponsor": {
+    "message": "Skip sponsor/self-promotion"
+  },
+  "cmdSkipIntro": {
+    "message": "Skip intro"
+  },
+  "cmdJumpConclusion": {
+    "message": "Jump to conclusion"
+  },
+  "cmdFocusSearch": {
+    "message": "Focus the in-video search field"
+  },
+  "cat_sponsor": {
+    "message": "Sponsor"
+  },
+  "cat_selfpromo": {
+    "message": "Self-promotion"
+  },
+  "cat_interaction": {
+    "message": "Interaction reminder"
+  },
+  "cat_intro": {
+    "message": "Intro"
+  },
+  "cat_outro": {
+    "message": "Outro"
+  },
+  "cat_preview": {
+    "message": "Preview/Recap"
+  },
+  "cat_filler": {
+    "message": "Filler"
+  },
+  "cat_music_offtopic": {
+    "message": "Music (off-topic)"
+  },
+  "cat_conclusion": {
+    "message": "Conclusion"
+  },
+  "cat_chapter": {
+    "message": "Chapter"
+  },
+  "status_loading": {
+    "message": "Loading video data…"
+  },
+  "status_loading_transcript": {
+    "message": "Loading transcript…"
+  },
+  "status_transcript_loaded": {
+    "message": "Transcript loaded ($1 lines$2) · AI analysis $3"
+  },
+  "status_auto_generated": {
+    "message": ", auto-generated"
+  },
+  "status_no_transcript": {
+    "message": "No transcript: $1"
+  },
+  "status_auto_analysis_skipped": {
+    "message": "Auto analysis skipped: video longer than $1 min (run it manually via ✨ Analyze, $2)"
+  },
+  "status_analysis_failed": {
+    "message": "AI analysis failed: $1"
+  },
+  "status_analysis_running": {
+    "message": "AI analysis running…"
+  },
+  "status_analysis_cached": {
+    "message": "AI analysis (cached)"
+  },
+  "status_analysis_done": {
+    "message": "AI analysis done"
+  },
+  "error_prefix": {
+    "message": "Error: $1"
+  },
+  "err_player_data": {
+    "message": "Player data not available"
+  },
+  "err_captions_fetch": {
+    "message": "Caption request failed ($1)"
+  },
+  "err_captions_empty": {
+    "message": "Caption response empty"
+  },
+  "err_track_empty": {
+    "message": "Caption track empty"
+  },
+  "err_no_track": {
+    "message": "Video has no caption track"
+  },
+  "err_innertube": {
+    "message": "get_transcript failed ($1)"
+  },
+  "err_innertube_empty": {
+    "message": "get_transcript empty"
+  },
+  "err_no_bg": {
+    "message": "No response from background script"
+  },
+  "err_no_key": {
+    "message": "No Anthropic API key set (open the extension settings)."
+  },
+  "err_key_invalid": {
+    "message": "API key invalid"
+  },
+  "err_rate_limit": {
+    "message": "Rate limit reached, please wait a moment"
+  },
+  "err_refusal": {
+    "message": "Request was declined by the model"
+  },
+  "err_truncated": {
+    "message": "Response truncated (max_tokens)"
+  },
+  "prompt_language": {
+    "message": "Answer in English."
+  },
+  "search_hits": {
+    "message": "$1 hits in the transcript:"
+  },
+  "search_no_hits": {
+    "message": "No hits in the transcript. Try “Ask AI” for a semantic search."
+  },
+  "jump_none_skip": {
+    "message": "No $1 segment known – try running the AI analysis."
+  },
+  "jump_none_to": {
+    "message": "$1 not found – try running the AI analysis."
+  },
+  "toast_jumped": {
+    "message": "$1 → $2"
+  },
+  "toast_skipped": {
+    "message": "$1 skipped ($2 – $3)"
+  },
+  "undo": {
+    "message": "Undo"
+  },
+  "skip_button": {
+    "message": "Skip $1 ⏭"
+  },
+  "bar_placeholder": {
+    "message": "Search in video … (Enter = text, Ctrl+Enter = AI)"
+  },
+  "bar_no_transcript": {
+    "message": "No transcript available"
+  },
+  "tip_local_search": {
+    "message": "Full-text search in the transcript (free)"
+  },
+  "tip_ask": {
+    "message": "Ask Claude about the content"
+  },
+  "btn_ask": {
+    "message": "Ask AI"
+  },
+  "tip_analyze": {
+    "message": "Detect chapters, intro/outro, sponsor and conclusion with Claude"
+  },
+  "btn_analyze": {
+    "message": "Analyze"
+  },
+  "tip_collapse": {
+    "message": "Collapse results"
+  },
+  "tip_expand": {
+    "message": "Expand results"
+  },
+  "btn_clear_chat": {
+    "message": "Clear history"
+  },
+  "summary_ai": {
+    "message": "Summary (AI)"
+  },
+  "chapters_n": {
+    "message": "Chapters ($1)"
+  },
+  "segments_n": {
+    "message": "Segments ($1)"
+  },
+  "chapter_n": {
+    "message": "Chapter $1"
+  },
+  "seg_until": {
+    "message": "$1 until $2"
+  },
+  "tip_ignore": {
+    "message": "Ignore this segment for this video"
+  },
+  "transcript": {
+    "message": "Transcript"
+  },
+  "copy_chapters": {
+    "message": "Copy chapters (YouTube format)"
+  },
+  "copy_transcript": {
+    "message": "Copy transcript"
+  },
+  "copied": {
+    "message": "Copied ✓"
+  },
+  "copy_failed": {
+    "message": "Copy failed"
+  },
+  "analysis_cost": {
+    "message": "AI analysis $1"
+  },
+  "video": {
+    "message": "Video"
+  },
+  "tab_search": {
+    "message": "Search"
+  },
+  "tab_settings": {
+    "message": "Settings"
+  },
+  "popup_no_video": {
+    "message": "Open a YouTube video to search it, ask questions and jump around from here."
+  },
+  "popup_key_warn": {
+    "message": "No API key set. AI features are inactive – add one in the “Settings” tab."
+  },
+  "shortcuts_hint": {
+    "message": "Shortcuts: Alt+S sponsor, Alt+I intro, Alt+F conclusion, Alt+K search (change at chrome://extensions/shortcuts)"
+  },
+  "stats_saved": {
+    "message": "⏱ $1 saved · $2 segments skipped"
+  },
+  "unit_s": {
+    "message": "$1 s"
+  },
+  "unit_min": {
+    "message": "$1 min"
+  },
+  "jump_intro": {
+    "message": "⏩ Intro"
+  },
+  "jump_sponsor": {
+    "message": "💰 Sponsor"
+  },
+  "jump_conclusion": {
+    "message": "🎯 Conclusion"
+  },
+  "opt_title": {
+    "message": "YouTube Skipper – Settings"
+  },
+  "opt_h_ai": {
+    "message": "AI (Claude API)"
+  },
+  "opt_api_key": {
+    "message": "Anthropic API key"
+  },
+  "opt_api_hint": {
+    "message": "Stored only locally in this extension (chrome.storage.local) and sent exclusively to api.anthropic.com. Create a key at console.anthropic.com → API Keys."
+  },
+  "opt_model": {
+    "message": "Model"
+  },
+  "opt_model_opus": {
+    "message": "Claude Opus 5.5 (default, best quality – approx. $4 / $20 per 1M tokens)"
+  },
+  "opt_model_sonnet": {
+    "message": "Claude Sonnet 5.5 (approx. $2 / $10 per 1M tokens)"
+  },
+  "opt_model_haiku": {
+    "message": "Claude Haiku 5.5 (cheap, approx. $0.10 / $0.50 per 1M tokens)"
+  },
+  "opt_auto_analyze": {
+    "message": "Run the AI analysis automatically for every video (one API call per video)"
+  },
+  "opt_auto_analyze_max": {
+    "message": "Auto analysis only up to this video length in minutes (0 = no limit)"
+  },
+  "opt_h_skip": {
+    "message": "Automatic skipping"
+  },
+  "opt_auto_skip": {
+    "message": "Enable auto-skip"
+  },
+  "opt_sponsorblock": {
+    "message": "Use SponsorBlock community data (free, sponsor.ajay.app)"
+  },
+  "opt_categories_hint": {
+    "message": "Categories to skip automatically:"
+  },
+  "opt_h_general": {
+    "message": "General"
+  },
+  "opt_show_bar": {
+    "message": "Show the search bar below the video"
+  },
+  "opt_language": {
+    "message": "Preferred caption language (code, e.g. de, en; empty = browser language)"
+  },
+  "opt_save": {
+    "message": "Save"
+  },
+  "opt_saved": {
+    "message": "Saved ✓"
+  },
+  "opt_h_usage": {
+    "message": "Usage & costs (estimated)"
+  },
+  "opt_th_model": {
+    "message": "Model"
+  },
+  "opt_th_calls": {
+    "message": "Calls"
+  },
+  "opt_th_input": {
+    "message": "Input"
+  },
+  "opt_th_cache": {
+    "message": "Cache reads"
+  },
+  "opt_th_output": {
+    "message": "Output"
+  },
+  "opt_th_usd": {
+    "message": "≈ USD"
+  },
+  "opt_no_calls": {
+    "message": "No API calls yet."
+  },
+  "opt_cache_info": {
+    "message": "$1 video analyses cached"
+  },
+  "opt_skip_stats": {
+    "message": "Skipped: $1 segments, $2 minutes saved."
+  },
+  "opt_clear_cache": {
+    "message": "Clear analysis cache"
+  },
+  "opt_reset_skip": {
+    "message": "Reset skip statistics"
+  },
+  "opt_reset_usage": {
+    "message": "Reset usage statistics"
+  },
+  "opt_cat_sponsor": {
+    "message": "Sponsor (paid promotion)"
+  },
+  "opt_cat_selfpromo": {
+    "message": "Self-promotion (merch, courses, Patreon)"
+  },
+  "opt_cat_interaction": {
+    "message": "Like/subscribe reminders"
+  },
+  "opt_cat_intro": {
+    "message": "Intro"
+  },
+  "opt_cat_outro": {
+    "message": "Outro / end cards"
+  },
+  "opt_cat_preview": {
+    "message": "Preview / recap"
+  },
+  "opt_cat_filler": {
+    "message": "Filler / tangents"
+  },
+  "opt_cat_music_offtopic": {
+    "message": "Music (off-topic, SponsorBlock)"
+  }
+}

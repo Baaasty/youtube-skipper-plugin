@@ -2,6 +2,7 @@
 'use strict';
 importScripts('../content/lib.js');
 const L = globalThis.YTSkipperLib;
+const t = L.t;
 
 const SPONSORBLOCK_API = 'https://sponsor.ajay.app/api/skipSegments';
 const SPONSORBLOCK_CATEGORIES = ['sponsor', 'selfpromo', 'interaction', 'intro', 'outro', 'preview', 'filler', 'music_offtopic'];
@@ -15,7 +16,7 @@ const CACHE_LIMIT = 100;
 const SYSTEM_PROMPT =
   'Du bist ein Assistent, der Transkripte von YouTube-Videos auswertet. ' +
   'Das Transkript besteht aus Zeilen im Format "[m:ss] Text" bzw. "[h:mm:ss] Text". ' +
-  'Zeitangaben in deiner Antwort sind immer Sekunden ab Videobeginn (Zahl). Antworte auf Deutsch.';
+  'Zeitangaben in deiner Antwort sind immer Sekunden ab Videobeginn (Zahl).';
 
 const ANALYZE_SCHEMA = {
   type: 'object',
@@ -112,7 +113,7 @@ async function getApiConfig() {
   const local = await chrome.storage.local.get('apiKey');
   const sync = await chrome.storage.sync.get('settings');
   const model = (sync.settings && sync.settings.model) || DEFAULT_MODEL;
-  if (!local.apiKey) throw new Error('Kein Anthropic-API-Key hinterlegt (Einstellungen der Erweiterung öffnen).');
+  if (!local.apiKey) throw new Error(t('err_no_key'));
   return { apiKey: local.apiKey, model };
 }
 
@@ -129,7 +130,7 @@ async function claudeJson({ apiKey, model, userBlocks, schema, maxTokens, effort
   const body = {
     model,
     max_tokens: maxTokens,
-    system: SYSTEM_PROMPT,
+    system: SYSTEM_PROMPT + ' ' + t('prompt_language'),
     messages: [{ role: 'user', content: userBlocks }],
     output_config: { effort, format: { type: 'json_schema', schema } },
   };
@@ -148,17 +149,17 @@ async function claudeJson({ apiKey, model, userBlocks, schema, maxTokens, effort
   if (!res.ok) {
     let detail = res.statusText;
     try { detail = (await res.json()).error?.message || detail; } catch (e) { /* ignore */ }
-    if (res.status === 401) detail = 'API-Key ungültig';
-    if (res.status === 429) detail = 'Rate-Limit erreicht, bitte kurz warten';
+    if (res.status === 401) detail = t('err_key_invalid');
+    if (res.status === 429) detail = t('err_rate_limit');
     throw new Error(`Claude API ${res.status}: ${detail}`);
   }
   const data = await res.json();
   await recordUsage(model, data.usage);
   if (data.stop_reason === 'refusal') {
     const cat = data.stop_details && data.stop_details.category;
-    throw new Error('Anfrage wurde vom Modell abgelehnt' + (cat ? ` (${cat})` : ''));
+    throw new Error(t('err_refusal') + (cat ? ` (${cat})` : ''));
   }
-  if (data.stop_reason === 'max_tokens') throw new Error('Antwort abgeschnitten (max_tokens)');
+  if (data.stop_reason === 'max_tokens') throw new Error(t('err_truncated'));
   const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
   return { json: JSON.parse(text), usage: data.usage };
 }

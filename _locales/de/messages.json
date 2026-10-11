@@ -1,0 +1,371 @@
+{
+  "extName": {
+    "message": "YouTube Skipper"
+  },
+  "extDescription": {
+    "message": "Intro skippen, zum Fazit springen, Sponsor-Segmente automatisch überspringen und Stellen im Video per Text oder KI finden – auf Basis des Transkripts."
+  },
+  "cmdSkipSponsor": {
+    "message": "Sponsor/Eigenwerbung überspringen"
+  },
+  "cmdSkipIntro": {
+    "message": "Intro überspringen"
+  },
+  "cmdJumpConclusion": {
+    "message": "Zum Fazit springen"
+  },
+  "cmdFocusSearch": {
+    "message": "Suchfeld im Video fokussieren"
+  },
+  "cat_sponsor": {
+    "message": "Sponsor"
+  },
+  "cat_selfpromo": {
+    "message": "Eigenwerbung"
+  },
+  "cat_interaction": {
+    "message": "Like/Abo-Aufruf"
+  },
+  "cat_intro": {
+    "message": "Intro"
+  },
+  "cat_outro": {
+    "message": "Outro"
+  },
+  "cat_preview": {
+    "message": "Vorschau/Recap"
+  },
+  "cat_filler": {
+    "message": "Füller"
+  },
+  "cat_music_offtopic": {
+    "message": "Musik (Off-Topic)"
+  },
+  "cat_conclusion": {
+    "message": "Fazit"
+  },
+  "cat_chapter": {
+    "message": "Kapitel"
+  },
+  "status_loading": {
+    "message": "Lade Videodaten…"
+  },
+  "status_loading_transcript": {
+    "message": "Lade Transkript…"
+  },
+  "status_transcript_loaded": {
+    "message": "Transkript geladen ($1 Zeilen$2) · KI-Analyse $3"
+  },
+  "status_auto_generated": {
+    "message": ", automatisch"
+  },
+  "status_no_transcript": {
+    "message": "Kein Transkript: $1"
+  },
+  "status_auto_analysis_skipped": {
+    "message": "Auto-Analyse übersprungen: Video länger als $1 min (manuell per ✨ Analyse, $2)"
+  },
+  "status_analysis_failed": {
+    "message": "KI-Analyse fehlgeschlagen: $1"
+  },
+  "status_analysis_running": {
+    "message": "KI-Analyse läuft…"
+  },
+  "status_analysis_cached": {
+    "message": "KI-Analyse (aus Cache)"
+  },
+  "status_analysis_done": {
+    "message": "KI-Analyse fertig"
+  },
+  "error_prefix": {
+    "message": "Fehler: $1"
+  },
+  "err_player_data": {
+    "message": "Player-Daten nicht verfügbar"
+  },
+  "err_captions_fetch": {
+    "message": "Untertitel-Abruf fehlgeschlagen ($1)"
+  },
+  "err_captions_empty": {
+    "message": "Untertitel-Antwort leer"
+  },
+  "err_track_empty": {
+    "message": "Untertitelspur leer"
+  },
+  "err_no_track": {
+    "message": "Video hat keine Untertitelspur"
+  },
+  "err_innertube": {
+    "message": "get_transcript fehlgeschlagen ($1)"
+  },
+  "err_innertube_empty": {
+    "message": "get_transcript leer"
+  },
+  "err_no_bg": {
+    "message": "Keine Antwort vom Hintergrundskript"
+  },
+  "err_no_key": {
+    "message": "Kein Anthropic-API-Key hinterlegt (Einstellungen der Erweiterung öffnen)."
+  },
+  "err_key_invalid": {
+    "message": "API-Key ungültig"
+  },
+  "err_rate_limit": {
+    "message": "Rate-Limit erreicht, bitte kurz warten"
+  },
+  "err_refusal": {
+    "message": "Anfrage wurde vom Modell abgelehnt"
+  },
+  "err_truncated": {
+    "message": "Antwort abgeschnitten (max_tokens)"
+  },
+  "prompt_language": {
+    "message": "Antworte auf Deutsch."
+  },
+  "search_hits": {
+    "message": "$1 Treffer im Transkript:"
+  },
+  "search_no_hits": {
+    "message": "Keine Treffer im Transkript. Versuche „KI fragen“ für eine inhaltliche Suche."
+  },
+  "jump_none_skip": {
+    "message": "Kein $1-Segment bekannt – ggf. KI-Analyse starten."
+  },
+  "jump_none_to": {
+    "message": "$1 nicht gefunden – ggf. KI-Analyse starten."
+  },
+  "toast_jumped": {
+    "message": "$1 → $2"
+  },
+  "toast_skipped": {
+    "message": "$1 übersprungen ($2 – $3)"
+  },
+  "undo": {
+    "message": "Rückgängig"
+  },
+  "skip_button": {
+    "message": "$1 überspringen ⏭"
+  },
+  "bar_placeholder": {
+    "message": "Im Video suchen … (Enter = Text, Strg+Enter = KI)"
+  },
+  "bar_no_transcript": {
+    "message": "Kein Transkript verfügbar"
+  },
+  "tip_local_search": {
+    "message": "Volltextsuche im Transkript (kostenlos)"
+  },
+  "tip_ask": {
+    "message": "Inhaltliche Frage an Claude"
+  },
+  "btn_ask": {
+    "message": "KI fragen"
+  },
+  "tip_analyze": {
+    "message": "Kapitel, Intro/Outro, Sponsor und Fazit per Claude erkennen"
+  },
+  "btn_analyze": {
+    "message": "Analyse"
+  },
+  "tip_collapse": {
+    "message": "Ergebnisse einklappen"
+  },
+  "tip_expand": {
+    "message": "Ergebnisse ausklappen"
+  },
+  "btn_clear_chat": {
+    "message": "Verlauf leeren"
+  },
+  "summary_ai": {
+    "message": "Zusammenfassung (KI)"
+  },
+  "chapters_n": {
+    "message": "Kapitel ($1)"
+  },
+  "segments_n": {
+    "message": "Segmente ($1)"
+  },
+  "chapter_n": {
+    "message": "Kapitel $1"
+  },
+  "seg_until": {
+    "message": "$1 bis $2"
+  },
+  "tip_ignore": {
+    "message": "Dieses Segment für dieses Video ignorieren"
+  },
+  "transcript": {
+    "message": "Transkript"
+  },
+  "copy_chapters": {
+    "message": "Kapitel kopieren (YouTube-Format)"
+  },
+  "copy_transcript": {
+    "message": "Transkript kopieren"
+  },
+  "copied": {
+    "message": "Kopiert ✓"
+  },
+  "copy_failed": {
+    "message": "Kopieren fehlgeschlagen"
+  },
+  "analysis_cost": {
+    "message": "KI-Analyse $1"
+  },
+  "video": {
+    "message": "Video"
+  },
+  "tab_search": {
+    "message": "Suche"
+  },
+  "tab_settings": {
+    "message": "Einstellungen"
+  },
+  "popup_no_video": {
+    "message": "Öffne ein YouTube-Video, dann kannst du hier im Video suchen, Fragen stellen und springen."
+  },
+  "popup_key_warn": {
+    "message": "Kein API-Key hinterlegt. KI-Funktionen sind inaktiv – im Tab „Einstellungen“ eintragen."
+  },
+  "shortcuts_hint": {
+    "message": "Tastenkürzel: Alt+S Sponsor, Alt+I Intro, Alt+F Fazit, Alt+K Suche (änderbar unter chrome://extensions/shortcuts)"
+  },
+  "stats_saved": {
+    "message": "⏱ $1 gespart · $2 Segmente übersprungen"
+  },
+  "unit_s": {
+    "message": "$1 s"
+  },
+  "unit_min": {
+    "message": "$1 min"
+  },
+  "jump_intro": {
+    "message": "⏩ Intro"
+  },
+  "jump_sponsor": {
+    "message": "💰 Sponsor"
+  },
+  "jump_conclusion": {
+    "message": "🎯 Fazit"
+  },
+  "opt_title": {
+    "message": "YouTube Skipper – Einstellungen"
+  },
+  "opt_h_ai": {
+    "message": "KI (Claude API)"
+  },
+  "opt_api_key": {
+    "message": "Anthropic API-Key"
+  },
+  "opt_api_hint": {
+    "message": "Wird nur lokal in dieser Erweiterung gespeichert (chrome.storage.local) und ausschließlich an api.anthropic.com gesendet. Key erstellen: console.anthropic.com → API Keys."
+  },
+  "opt_model": {
+    "message": "Modell"
+  },
+  "opt_model_opus": {
+    "message": "Claude Opus 5.5 (Standard, beste Qualität – ca. 4 $ / 20 $ pro 1M Tokens)"
+  },
+  "opt_model_sonnet": {
+    "message": "Claude Sonnet 5.5 (ca. 2 $ / 10 $ pro 1M Tokens)"
+  },
+  "opt_model_haiku": {
+    "message": "Claude Haiku 5.5 (günstig, ca. 0,10 $ / 0,50 $ pro 1M Tokens)"
+  },
+  "opt_auto_analyze": {
+    "message": "KI-Analyse automatisch bei jedem Video starten (verursacht pro Video einen API-Aufruf)"
+  },
+  "opt_auto_analyze_max": {
+    "message": "Auto-Analyse nur bis zu dieser Videolänge in Minuten (0 = keine Grenze)"
+  },
+  "opt_h_skip": {
+    "message": "Automatisches Überspringen"
+  },
+  "opt_auto_skip": {
+    "message": "Auto-Skip aktivieren"
+  },
+  "opt_sponsorblock": {
+    "message": "SponsorBlock-Community-Daten verwenden (kostenlos, sponsor.ajay.app)"
+  },
+  "opt_categories_hint": {
+    "message": "Welche Kategorien automatisch übersprungen werden:"
+  },
+  "opt_h_general": {
+    "message": "Allgemein"
+  },
+  "opt_show_bar": {
+    "message": "Suchleiste unter dem Video anzeigen"
+  },
+  "opt_language": {
+    "message": "Bevorzugte Untertitel-Sprache (Code, z. B. de, en; leer = Browsersprache)"
+  },
+  "opt_save": {
+    "message": "Speichern"
+  },
+  "opt_saved": {
+    "message": "Gespeichert ✓"
+  },
+  "opt_h_usage": {
+    "message": "Nutzung & Kosten (geschätzt)"
+  },
+  "opt_th_model": {
+    "message": "Modell"
+  },
+  "opt_th_calls": {
+    "message": "Aufrufe"
+  },
+  "opt_th_input": {
+    "message": "Input"
+  },
+  "opt_th_cache": {
+    "message": "Cache-Lesen"
+  },
+  "opt_th_output": {
+    "message": "Output"
+  },
+  "opt_th_usd": {
+    "message": "≈ USD"
+  },
+  "opt_no_calls": {
+    "message": "Noch keine API-Aufrufe."
+  },
+  "opt_cache_info": {
+    "message": "$1 Video-Analysen im Cache"
+  },
+  "opt_skip_stats": {
+    "message": "Übersprungen: $1 Segmente, $2 Minuten gespart."
+  },
+  "opt_clear_cache": {
+    "message": "Analyse-Cache leeren"
+  },
+  "opt_reset_skip": {
+    "message": "Skip-Statistik zurücksetzen"
+  },
+  "opt_reset_usage": {
+    "message": "Statistik zurücksetzen"
+  },
+  "opt_cat_sponsor": {
+    "message": "Sponsor (bezahlte Werbung)"
+  },
+  "opt_cat_selfpromo": {
+    "message": "Eigenwerbung (Merch, Kurse, Patreon)"
+  },
+  "opt_cat_interaction": {
+    "message": "Like/Abo-Aufrufe"
+  },
+  "opt_cat_intro": {
+    "message": "Intro"
+  },
+  "opt_cat_outro": {
+    "message": "Outro / Abspann"
+  },
+  "opt_cat_preview": {
+    "message": "Vorschau / Recap"
+  },
+  "opt_cat_filler": {
+    "message": "Füller / Abschweifungen"
+  },
+  "opt_cat_music_offtopic": {
+    "message": "Musik (Off-Topic, SponsorBlock)"
+  }
+}

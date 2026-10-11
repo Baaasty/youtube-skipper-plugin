@@ -7,59 +7,66 @@
     body { font: 14px/1.5 system-ui, sans-serif; max-width: 680px; margin: 32px auto; padding: 0 16px; color: #111; }
     h1 { font-size: 20px; } h2 { font-size: 15px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
     label { display: block; margin: 8px 0; }
-    input[type=text], input[type=password], select { width: 100%; padding: 7px 9px; border: 1px solid #bbb; border-radius: 6px; font: inherit; }
-    .row { display: flex; gap: 12px; align-items: center; }
-    .row label { margin: 0; }
+    input[type=text], input[type=password], input[type=number], select { width: 100%; padding: 7px 9px; border: 1px solid #bbb; border-radius: 6px; font: inherit; }
     .hint { color: #666; font-size: 12px; }
     button { padding: 7px 14px; border-radius: 6px; border: 1px solid #bbb; background: #f6f6f6; cursor: pointer; font: inherit; }
     button.primary { background: #cc0000; color: #fff; border-color: #cc0000; }
     #saved { color: #2a7; margin-left: 10px; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { border-bottom: 1px solid #eee; padding: 4px 6px; text-align: right; } th:first-child, td:first-child { text-align: left; }
     body.embed { max-width: none; margin: 0; padding: 4px 12px 12px; font-size: 13px; }
     body.embed h1 { display: none; }
     body.embed h2 { margin-top: 16px; }
     @media (prefers-color-scheme: dark) { body { color: #eee; background: #202020; } input, select { background: #2c2c2c; color: #eee; border-color: #444; } button { background: #2c2c2c; color: #eee; border-color: #444; } h2 { border-color: #3a3a3a; } td, th { border-color: #3a3a3a; } }
-    table { border-collapse: collapse; width: 100%; font-size: 13px; } td, th { border-bottom: 1px solid #eee; padding: 4px 6px; text-align: right; } th:first-child, td:first-child { text-align: left; }
   </style>
 </head>
 <body>
-  <h1>⏭ YouTube Skipper – Einstellungen</h1>
+  <h1>⏭ <span data-i18n="opt_title">YouTube Skipper – Einstellungen</span></h1>
 
-  <h2>KI (Claude API)</h2>
-  <label>Anthropic API-Key
+  <h2 data-i18n="opt_h_ai">KI (Claude API)</h2>
+  <label><span data-i18n="opt_api_key">Anthropic API-Key</span>
     <input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off">
   </label>
-  <p class="hint">Wird nur lokal in dieser Erweiterung gespeichert (chrome.storage.local) und ausschließlich an api.anthropic.com gesendet. Key erstellen: console.anthropic.com → API Keys.</p>
-  <label>Modell
+  <p class="hint" data-i18n="opt_api_hint"></p>
+  <label><span data-i18n="opt_model">Modell</span>
     <select id="model">
-      <option value="claude-opus-5-5">Claude Opus 5.5 (Standard, beste Qualität – ca. 4 $ / 20 $ pro 1M Tokens)</option>
-      <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (ca. 2 $ / 10 $ pro 1M Tokens)</option>
-      <option value="claude-haiku-5-5">Claude Haiku 5.5 (günstig, ca. 0,10 $ / 0,50 $ pro 1M Tokens)</option>
+      <option value="claude-opus-5-5" data-i18n="opt_model_opus"></option>
+      <option value="claude-sonnet-5-5" data-i18n="opt_model_sonnet"></option>
+      <option value="claude-haiku-5-5" data-i18n="opt_model_haiku"></option>
     </select>
   </label>
-  <label><input type="checkbox" id="autoAnalyze"> KI-Analyse automatisch bei jedem Video starten (verursacht pro Video einen API-Aufruf)</label>
-  <label>Auto-Analyse nur bis zu dieser Videolänge in Minuten (0 = keine Grenze)
+  <label><input type="checkbox" id="autoAnalyze"> <span data-i18n="opt_auto_analyze"></span></label>
+  <label><span data-i18n="opt_auto_analyze_max"></span>
     <input type="number" id="autoAnalyzeMaxMinutes" min="0" step="5">
   </label>
 
-  <h2>Automatisches Überspringen</h2>
-  <label><input type="checkbox" id="autoSkip"> Auto-Skip aktivieren</label>
-  <label><input type="checkbox" id="useSponsorBlock"> SponsorBlock-Community-Daten verwenden (kostenlos, sponsor.ajay.app)</label>
-  <p class="hint">Welche Kategorien automatisch übersprungen werden:</p>
+  <h2 data-i18n="opt_h_skip">Automatisches Überspringen</h2>
+  <label><input type="checkbox" id="autoSkip"> <span data-i18n="opt_auto_skip"></span></label>
+  <label><input type="checkbox" id="useSponsorBlock"> <span data-i18n="opt_sponsorblock"></span></label>
+  <p class="hint" data-i18n="opt_categories_hint"></p>
   <div id="categories"></div>
 
-  <h2>Allgemein</h2>
-  <label><input type="checkbox" id="showBar"> Suchleiste unter dem Video anzeigen</label>
-  <label>Bevorzugte Untertitel-Sprache (Code, z. B. <code>de</code>, <code>en</code>; leer = Browsersprache)
+  <h2 data-i18n="opt_h_general">Allgemein</h2>
+  <label><input type="checkbox" id="showBar"> <span data-i18n="opt_show_bar"></span></label>
+  <label><span data-i18n="opt_language"></span>
     <input type="text" id="language" placeholder="de">
   </label>
 
-  <p><button class="primary" id="save">Speichern</button><span id="saved"></span></p>
+  <p><button class="primary" id="save" data-i18n="opt_save">Speichern</button><span id="saved"></span></p>
 
-  <h2>Nutzung &amp; Kosten (geschätzt)</h2>
-  <table id="usage"><thead><tr><th>Modell</th><th>Aufrufe</th><th>Input</th><th>Cache-Lesen</th><th>Output</th><th>≈ USD</th></tr></thead><tbody></tbody></table>
+  <h2 data-i18n="opt_h_usage">Nutzung &amp; Kosten (geschätzt)</h2>
+  <table id="usage"><thead><tr>
+    <th data-i18n="opt_th_model"></th><th data-i18n="opt_th_calls"></th><th data-i18n="opt_th_input"></th>
+    <th data-i18n="opt_th_cache"></th><th data-i18n="opt_th_output"></th><th data-i18n="opt_th_usd"></th>
+  </tr></thead><tbody></tbody></table>
   <p id="skipStats" class="hint"></p>
-  <p><button id="clearCache">Analyse-Cache leeren</button> <button id="resetSkipStats">Skip-Statistik zurücksetzen</button> <button id="resetUsage">Statistik zurücksetzen</button> <span id="cacheInfo" class="hint"></span></p>
+  <p>
+    <button id="clearCache" data-i18n="opt_clear_cache"></button>
+    <button id="resetSkipStats" data-i18n="opt_reset_skip"></button>
+    <button id="resetUsage" data-i18n="opt_reset_usage"></button>
+    <span id="cacheInfo" class="hint"></span>
+  </p>
 
+  <script src="../content/lib.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

@@ -15,6 +15,23 @@
     chapter: 'Kapitel',
   };
 
+  // Übersetzung über chrome.i18n; außerhalb der Extension (Node-Tests) Fallback auf den Schlüssel.
+  function t(key, subs) {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.i18n && chrome.i18n.getMessage) {
+        const list = subs === undefined ? [] : (Array.isArray(subs) ? subs : [subs]).map(String);
+        const msg = chrome.i18n.getMessage(key, list);
+        if (msg) return msg;
+      }
+    } catch (e) { /* ignore */ }
+    return key;
+  }
+
+  function categoryLabel(cat) {
+    const msg = t('cat_' + cat);
+    return msg !== 'cat_' + cat ? msg : (CATEGORY_LABELS[cat] || cat);
+  }
+
   const INTRO_RE = /\b(intro|einleitung|einführung|begrüßung|begruessung|vorstellung|welcome|opening|hallo|start)\b/i;
   const CONCLUSION_RE = /\b(fazit|zusammenfassung|schluss|ergebnis|resümee|resumee|conclusion|summary|recap|verdict|final thoughts|takeaways|wrap[- ]?up|ending|outro|abschluss|ende)\b/i;
   const SPONSOR_RE = /\b(sponsor|werbung|anzeige|ad\b|advertisement|partner)\b/i;
@@ -190,6 +207,8 @@
 
   const lib = {
     CATEGORY_LABELS,
+    t,
+    categoryLabel,
     PRICES,
     estimateTokens,
     estimateCostUsd,

@@ -7,6 +7,8 @@
 
   const L = globalThis.YTSkipperLib;
   const LOG = (...a) => console.debug('[YT Skipper]', ...a);
+  const t = L.t;
+  const catLabel = L.categoryLabel;
 
   const DEFAULT_SETTINGS = {
     autoSkip: true,
@@ -91,7 +93,7 @@
           let data = null;
           try { data = JSON.parse(e.detail); } catch (err) { data = null; }
           if (data && data.videoId === videoId) { resolve(data); return; }
-          if (tries >= attempts) { reject(new Error('Player-Daten nicht verfügbar')); return; }
+          if (tries >= attempts) { reject(new Error(t('err_player_data'))); return; }
           setTimeout(ask, 500);
         };
         document.addEventListener('ytskipper:player-response', onRes);
@@ -110,7 +112,7 @@
       try {
         chrome.runtime.sendMessage(msg, (res) => {
           if (chrome.runtime.lastError) resolve({ error: chrome.runtime.lastError.message });
-          else resolve(res || { error: 'Keine Antwort vom Hintergrundskript' });
+          else resolve(res || { error: t('err_no_bg') });
         });
       } catch (e) { resolve({ error: e.message }); }
     });
@@ -130,9 +132,9 @@
   async function fetchTimedText(baseUrl) {
     const url = /[?&]fmt=/.test(baseUrl) ? baseUrl.replace(/fmt=[^&]*/, 'fmt=json3') : baseUrl + '&fmt=json3';
     const res = await fetch(url, { credentials: 'include' });
-    if (!res.ok) throw new Error('Untertitel-Abruf fehlgeschlagen (' + res.status + ')');
+    if (!res.ok) throw new Error(t('err_captions_fetch', res.status));
     const text = await res.text();
-    if (!text) throw new Error('Untertitel-Antwort leer');
+    if (!text) throw new Error(t('err_captions_empty'));
     const data = JSON.parse(text);
     const lines = [];
     for (const ev of data.events || []) {
@@ -161,7 +163,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error('get_transcript fehlgeschlagen (' + res.status + ')');
+    if (!res.ok) throw new Error(t('err_innertube', res.status));
     const json = await res.json();
     const segs = json?.actions?.[0]?.updateEngagementPanelAction?.content?.transcriptRenderer
       ?.content?.transcriptSearchPanelRenderer?.body?.transcriptSegmentListRenderer?.initialSegments || [];
@@ -183,15 +185,15 @@
       try {
         const lines = await fetchTimedText(track.baseUrl);
         if (lines.length) return { lines, lang: track.languageCode, kind: track.kind, source: 'captions' };
-        errors.push('Untertitelspur leer');
+        errors.push(t('err_track_empty'));
       } catch (e) { errors.push(e.message); }
     } else {
-      errors.push('Video hat keine Untertitelspur');
+      errors.push(t('err_no_track'));
     }
     try {
       const lines = await fetchViaInnerTube(info);
       if (lines.length) return { lines, lang: '', kind: '', source: 'innertube' };
-      errors.push('get_transcript leer');
+      errors.push(t('err_innertube_empty'));
     } catch (e) { errors.push(e.message); }
     throw new Error(errors.join('; '));
   }
@@ -202,7 +204,7 @@
     state = {
       videoId, info: null, video: null, transcript: null, transcriptText: '',
       chapters: [], segments: [], analysis: null, skipped: new Set(),
-      chat: [], busy: false, status: 'Lade Videodaten…', error: '', ignored: new Set(),
+      chat: [], busy: false, status: t('status_loading'), error: '', ignored: new Set(),
     };
     render();
 
@@ -225,24 +227,24 @@
       });
     }
 
-    setStatus('Lade Transkript…');
+    setStatus(t('status_loading_transcript'));
     try {
       state.transcript = await fetchTranscript(info);
       if (!state || state.videoId !== videoId) return;
       state.transcriptText = L.transcriptToText(state.transcript.lines);
-      setStatus(`Transkript geladen (${state.transcript.lines.length} Zeilen${state.transcript.kind === 'asr' ? ', automatisch' : ''}) · KI-Analyse ${costEstimate()}`);
+      setStatus(t('status_transcript_loaded', [state.transcript.lines.length, state.transcript.kind === 'asr' ? t('status_auto_generated') : '', costEstimate()]));
     } catch (e) {
       if (!state || state.videoId !== videoId) return;
-      setStatus('Kein Transkript: ' + e.message, true);
+      setStatus(t('status_no_transcript', e.message), true);
     }
     render();
 
     if (settings.autoAnalyze && state.transcript) {
       const minutes = (info.lengthSeconds || 0) / 60;
       if (settings.autoAnalyzeMaxMinutes > 0 && minutes > settings.autoAnalyzeMaxMinutes) {
-        setStatus(`Auto-Analyse übersprungen: Video länger als ${settings.autoAnalyzeMaxMinutes} min (manuell per ✨ Analyse, ${costEstimate()})`);
+        setStatus(t('status_auto_analysis_skipped', [settings.autoAnalyzeMaxMinutes, costEstimate()]));
       } else {
-        runAnalysis(false).catch((e) => setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true));
+        runAnalysis(false).catch((e) => setStatus(t('status_analysis_failed', e.message), true));
       }
     }
   }
@@ -269,7 +271,7 @@
     const sorted = yt.filter((c) => Number.isFinite(c.start)).sort((a, b) => a.start - b.start);
     if (sorted.length >= 2) {
       return sorted.map((c, i) => ({
-        start: c.start, title: c.title || `Kapitel ${i + 1}`,
+        start: c.start, title: c.title || t('chapter_n', i + 1),
         end: i + 1 < sorted.length ? sorted[i + 1].start : info.lengthSeconds,
       }));
     }
@@ -308,9 +310,8 @@
     state.skipped.add(seg.category + '@' + seg.start.toFixed(1));
     seek(seg.end);
     recordSkip(seg);
-    const label = L.CATEGORY_LABELS[seg.category] || seg.category;
-    showToast(`${label} übersprungen (${L.formatTime(seg.start)} – ${L.formatTime(seg.end)})`,
-      undoable ? { label: 'Rückgängig', onClick: () => seek(seg.start) } : null);
+    showToast(t('toast_skipped', [catLabel(seg.category), L.formatTime(seg.start), L.formatTime(seg.end)]),
+      undoable ? { label: t('undo'), onClick: () => seek(seg.start) } : null);
   }
 
   // ---------- Marker in der YouTube-Fortschrittsleiste ----------
@@ -328,7 +329,7 @@
       m.className = 'c-' + s.category;
       m.style.left = (s.start / len * 100) + '%';
       m.style.width = Math.max(0.2, (s.end - s.start) / len * 100) + '%';
-      m.title = `${L.CATEGORY_LABELS[s.category] || s.category} ${L.formatTime(s.start)} – ${L.formatTime(s.end)}`;
+      m.title = `${catLabel(s.category)} ${L.formatTime(s.start)} – ${L.formatTime(s.end)}`;
       host.appendChild(m);
     }
   }
@@ -345,7 +346,7 @@
       player.appendChild(skipBtn);
     }
     skipBtn._seg = seg;
-    skipBtn.textContent = `${L.CATEGORY_LABELS[seg.category] || seg.category} überspringen ⏭`;
+    skipBtn.textContent = t('skip_button', catLabel(seg.category));
     skipBtn.hidden = false;
   }
 
@@ -389,9 +390,9 @@
   function currentTime() { return state && state.video ? state.video.currentTime : 0; }
 
   const JUMPS = {
-    intro: { cats: ['intro'], label: 'Intro', mode: 'skip' },
-    sponsor: { cats: ['sponsor', 'selfpromo'], label: 'Sponsor', mode: 'skip' },
-    conclusion: { cats: ['conclusion', 'outro'], label: 'Fazit', mode: 'to' },
+    intro: { cats: ['intro'], label: () => catLabel('intro'), mode: 'skip' },
+    sponsor: { cats: ['sponsor', 'selfpromo'], label: () => catLabel('sponsor'), mode: 'skip' },
+    conclusion: { cats: ['conclusion', 'outro'], label: () => catLabel('conclusion'), mode: 'to' },
   };
 
   function hasJump(key) {
@@ -403,15 +404,15 @@
     if (!j || !state) return;
     if (j.mode === 'skip') {
       const seg = L.findNextSegment(state.segments, j.cats, currentTime());
-      if (!seg) { setStatus(`Kein ${j.label}-Segment bekannt – ggf. KI-Analyse starten.`); return; }
+      if (!seg) { setStatus(t('jump_none_skip', j.label())); return; }
       skipSegment(seg, false);
     } else {
       // Erste Kategorie bevorzugen (Fazit vor Outro).
       let seg = null;
       for (const cat of j.cats) { seg = state.segments.find((s) => s.category === cat); if (seg) break; }
-      if (!seg) { setStatus(`${j.label} nicht gefunden – ggf. KI-Analyse starten.`); return; }
+      if (!seg) { setStatus(t('jump_none_to', j.label())); return; }
       seek(seg.start);
-      showToast(`${j.label} → ${L.formatTime(seg.start)}`);
+      showToast(t('toast_jumped', [j.label(), L.formatTime(seg.start)]));
     }
   }
 
@@ -420,7 +421,7 @@
     if (!state || !state.transcript || state.busy) return;
     const videoId = state.videoId;
     state.busy = true;
-    setStatus('KI-Analyse läuft…');
+    setStatus(t('status_analysis_running'));
     render();
     try {
       const res = await sendMessage({
@@ -438,9 +439,9 @@
       }));
       if (aiChapters.length && !state.chapters.length) state.chapters = aiChapters;
       addSegments(aiSegs);
-      setStatus(res.cached ? 'KI-Analyse (aus Cache)' : 'KI-Analyse fertig');
+      setStatus(res.cached ? t('status_analysis_cached') : t('status_analysis_done'));
     } catch (e) {
-      setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true);
+      setStatus(t('status_analysis_failed', e.message), true);
     } finally {
       if (state && state.videoId === videoId) { state.busy = false; render(); }
     }
@@ -461,7 +462,7 @@
       if (res.error) throw new Error(res.error);
       state.chat.push({ role: 'bot', text: res.answer, matches: res.matches || [] });
     } catch (e) {
-      state.chat.push({ role: 'bot', text: 'Fehler: ' + e.message, matches: [] });
+      state.chat.push({ role: 'bot', text: t('error_prefix', e.message), matches: [] });
     } finally {
       if (state && state.videoId === videoId) { state.busy = false; render(); }
     }
@@ -473,7 +474,7 @@
     state.chat.push({ role: 'user', text: query });
     state.chat.push({
       role: 'bot',
-      text: hits.length ? `${hits.length} Treffer im Transkript:` : 'Keine Treffer im Transkript. Versuche „KI fragen“ für eine inhaltliche Suche.',
+      text: hits.length ? t('search_hits', hits.length) : t('search_no_hits'),
       matches: hits.map((h) => ({ start: h.start, label: h.text })),
       highlight: query,
     });
@@ -621,7 +622,7 @@
         timeline.appendChild(el('span', {
           className: 'c-' + s.category,
           style: `left:${left}%;width:${width}%`,
-          title: `${L.CATEGORY_LABELS[s.category] || s.category}${s.title ? ': ' + s.title : ''} (${L.formatTime(s.start)} – ${L.formatTime(s.end)}, ${s.source})`,
+          title: `${catLabel(s.category)}${s.title ? ': ' + s.title : ''} (${L.formatTime(s.start)} – ${L.formatTime(s.end)}, ${s.source})`,
           onclick: () => seek(s.start),
         }));
       }
@@ -631,7 +632,7 @@
     // Suchzeile
     const input = el('input', {
       type: 'text', className: 'yts-input',
-      placeholder: hasTranscript ? 'Im Video suchen … (Enter = Text, Strg+Enter = KI)' : 'Kein Transkript verfügbar',
+      placeholder: hasTranscript ? t('bar_placeholder') : t('bar_no_transcript'),
       disabled: !hasTranscript,
     });
     const doLocal = () => { const q = input.value.trim(); if (q) { input.value = ''; localSearch(q); } };
@@ -643,25 +644,25 @@
     input.addEventListener('keyup', (e) => e.stopPropagation());
     input.addEventListener('keypress', (e) => e.stopPropagation());
 
-    const chip = (key, icon, label) => el('button', {
+    const chip = (key, label) => el('button', {
       className: 'yts-chip', disabled: !hasJump(key), title: label, onclick: () => jump(key),
-    }, [icon + ' ' + label]);
+    }, [label]);
 
     bar.appendChild(el('div', { className: 'yts-bar-row' }, [
       el('span', { className: 'yts-logo', title: 'YouTube Skipper' }, ['⏭']),
       input,
-      el('button', { className: 'yts-chip', disabled: !hasTranscript, onclick: doLocal, title: 'Volltextsuche im Transkript (kostenlos)' }, ['🔍']),
-      el('button', { className: 'yts-chip primary', disabled: !hasTranscript || state.busy, onclick: doAI, title: 'Inhaltliche Frage an Claude' }, ['KI fragen']),
-      chip('intro', '⏩', 'Intro'),
-      chip('sponsor', '💰', 'Sponsor'),
-      chip('conclusion', '🎯', 'Fazit'),
+      el('button', { className: 'yts-chip', disabled: !hasTranscript, onclick: doLocal, title: t('tip_local_search') }, ['🔍']),
+      el('button', { className: 'yts-chip primary', disabled: !hasTranscript || state.busy, onclick: doAI, title: t('tip_ask') }, [t('btn_ask')]),
+      chip('intro', t('jump_intro')),
+      chip('sponsor', t('jump_sponsor')),
+      chip('conclusion', t('jump_conclusion')),
       el('button', {
         className: 'yts-chip', disabled: !hasTranscript || state.busy,
-        title: 'Kapitel, Intro/Outro, Sponsor und Fazit per Claude erkennen',
+        title: t('tip_analyze'),
         onclick: () => runAnalysis(!!state.analysis),
-      }, [state.busy ? '…' : (state.analysis ? '🔄' : '✨'), ' Analyse']),
+      }, [state.busy ? '…' : (state.analysis ? '🔄' : '✨'), ' ' + t('btn_analyze')]),
       el('button', {
-        className: 'yts-chip', title: resultsOpen ? 'Ergebnisse einklappen' : 'Ergebnisse ausklappen',
+        className: 'yts-chip', title: resultsOpen ? t('tip_collapse') : t('tip_expand'),
         onclick: () => { resultsOpen = !resultsOpen; render(); },
       }, [resultsOpen ? '▴' : '▾']),
     ]));
@@ -675,28 +676,28 @@
           for (const hit of m.matches || []) msg.appendChild(hitRow(hit.start, hit.label, m.highlight));
           box.appendChild(msg);
         }
-        box.appendChild(el('button', { className: 'yts-link', onclick: () => { state.chat = []; render(); } }, ['Verlauf leeren']));
+        box.appendChild(el('button', { className: 'yts-link', onclick: () => { state.chat = []; render(); } }, [t('btn_clear_chat')]));
       }
       if (state.analysis && state.analysis.summary) {
-        box.appendChild(el('details', null, [el('summary', null, ['Zusammenfassung (KI)']), el('div', { className: 'yts-msg' }, [state.analysis.summary])]));
+        box.appendChild(el('details', null, [el('summary', null, [t('summary_ai')]), el('div', { className: 'yts-msg' }, [state.analysis.summary])]));
       }
       if (state.chapters.length) {
         const list = el('div', { className: 'yts-chapters' });
         for (const c of state.chapters) list.appendChild(hitRow(c.start, c.title));
-        box.appendChild(el('details', null, [el('summary', null, [`Kapitel (${state.chapters.length})`]), list]));
+        box.appendChild(el('details', null, [el('summary', null, [t('chapters_n', state.chapters.length)]), list]));
       }
       const segs = state.segments.filter((s) => s.category !== 'chapter');
       if (segs.length) {
         const list = el('div', { className: 'yts-chapters' });
         for (const s of segs) {
-          const row = hitRow(s.start, `${L.CATEGORY_LABELS[s.category] || s.category} bis ${L.formatTime(s.end)}${s.title ? ' · ' + s.title : ''} (${s.source})`);
+          const row = hitRow(s.start, t('seg_until', [catLabel(s.category), L.formatTime(s.end)]) + (s.title ? ' · ' + s.title : '') + ` (${s.source})`);
           row.appendChild(el('button', {
-            className: 'yts-x', title: 'Dieses Segment für dieses Video ignorieren',
+            className: 'yts-x', title: t('tip_ignore'),
             onclick: (e) => { e.stopPropagation(); ignoreSegment(L.segmentKey(s)); },
           }, ['✕']));
           list.appendChild(row);
         }
-        box.appendChild(el('details', null, [el('summary', null, [`Segmente (${segs.length})`]), list]));
+        box.appendChild(el('details', null, [el('summary', null, [t('segments_n', segs.length)]), list]));
       }
       bar.appendChild(box);
       box.scrollTop = box.scrollHeight;

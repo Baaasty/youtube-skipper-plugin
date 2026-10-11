@@ -19,12 +19,12 @@ Stand wird mit jedem Push aktualisiert. `[x]` = fertig und auf `main`, `[ ]` = o
 - [x] Kapitel aus YouTubes eigener Kapitelleiste (auch automatisch erzeugte), nicht nur aus der Beschreibung
 - [x] Statistik „gesparte Zeit“ und übersprungene Segmente im Popup
 
-## v0.3 – Komfort und Kosten
+## v0.3 – Komfort und Kosten (fertig)
 
 - [x] Kostenschätzung vor der KI-Analyse (Tokens/Preis für das aktuelle Modell) in der Statuszeile
 - [x] Obergrenze für automatische Analyse (Videolänge), um lange Videos nicht ungefragt zu analysieren
 - [x] Export: Kapitel als YouTube-Beschreibung und Transkript als Text in die Zwischenablage
-- [~] Zweisprachiges UI (Deutsch/Englisch) über `chrome.i18n`
+- [x] Zweisprachiges UI (Deutsch/Englisch) über `chrome.i18n`
 - [x] Segment-Korrektur: einzelnes Segment für dieses Video ignorieren
 
 ## v0.4 – Release-Reife
