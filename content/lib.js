@@ -19,6 +19,43 @@
   const CONCLUSION_RE = /\b(fazit|zusammenfassung|schluss|ergebnis|resümee|resumee|conclusion|summary|recap|verdict|final thoughts|takeaways|wrap[- ]?up|ending|outro|abschluss|ende)\b/i;
   const SPONSOR_RE = /\b(sponsor|werbung|anzeige|ad\b|advertisement|partner)\b/i;
 
+  // USD pro 1M Tokens (Stand Oktober 2026) – nur für Schätzungen.
+  const PRICES = {
+    'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2 },
+    'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.2 },
+    'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheRead: 0.01 },
+  };
+
+  // Grobe Token-Schätzung für Transkripttext (ca. 3,3 Zeichen pro Token bei deutschem/englischem Text).
+  function estimateTokens(text) {
+    return Math.ceil(String(text || '').length / 3.3);
+  }
+
+  function estimateCostUsd(model, inputTokens, outputTokens) {
+    const p = PRICES[model];
+    if (!p) return null;
+    return (inputTokens * p.input + (outputTokens || 0) * p.output) / 1e6;
+  }
+
+  function formatUsd(usd) {
+    if (usd === null || usd === undefined) return '';
+    if (usd < 0.01) return '< 0,01 $';
+    return usd.toFixed(2).replace('.', ',') + ' $';
+  }
+
+  function formatTokens(n) {
+    return n >= 1000 ? (n / 1000).toFixed(1).replace('.', ',') + 'k' : String(n);
+  }
+
+  // Kapitel im YouTube-Beschreibungsformat ("0:00 Titel").
+  function chaptersToDescription(chapters) {
+    return (chapters || []).map((c) => `${formatTime(c.start)} ${c.title}`).join('\n');
+  }
+
+  function segmentKey(seg) {
+    return seg.category + '@' + Math.round(seg.start);
+  }
+
   function formatTime(sec) {
     sec = Math.max(0, Math.floor(Number(sec) || 0));
     const h = Math.floor(sec / 3600);
@@ -153,6 +190,13 @@
 
   const lib = {
     CATEGORY_LABELS,
+    PRICES,
+    estimateTokens,
+    estimateCostUsd,
+    formatUsd,
+    formatTokens,
+    chaptersToDescription,
+    segmentKey,
     formatTime,
     parseTimestamp,
     parseDescriptionChapters,

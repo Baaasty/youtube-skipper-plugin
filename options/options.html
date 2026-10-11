@@ -37,6 +37,9 @@
     </select>
   </label>
   <label><input type="checkbox" id="autoAnalyze"> KI-Analyse automatisch bei jedem Video starten (verursacht pro Video einen API-Aufruf)</label>
+  <label>Auto-Analyse nur bis zu dieser Videolänge in Minuten (0 = keine Grenze)
+    <input type="number" id="autoAnalyzeMaxMinutes" min="0" step="5">
+  </label>
 
   <h2>Automatisches Überspringen</h2>
   <label><input type="checkbox" id="autoSkip"> Auto-Skip aktivieren</label>

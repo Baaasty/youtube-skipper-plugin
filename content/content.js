@@ -14,6 +14,8 @@
     autoAnalyze: false,
     showBar: true,
     language: '',
+    model: 'claude-opus-5-5',
+    autoAnalyzeMaxMinutes: 60,
     skipCategories: {
       sponsor: true, selfpromo: true, interaction: false, intro: false,
       outro: false, preview: false, filler: false, music_offtopic: false,
@@ -200,12 +202,13 @@
     state = {
       videoId, info: null, video: null, transcript: null, transcriptText: '',
       chapters: [], segments: [], analysis: null, skipped: new Set(),
-      chat: [], busy: false, status: 'Lade Videodaten…', error: '',
+      chat: [], busy: false, status: 'Lade Videodaten…', error: '', ignored: new Set(),
     };
     render();
 
-    const info = await requestPlayerInfo(videoId);
+    const [info, ignoredStore] = await Promise.all([requestPlayerInfo(videoId), chrome.storage.local.get('ignored:' + videoId)]);
     if (!state || state.videoId !== videoId) return;
+    state.ignored = new Set(ignoredStore['ignored:' + videoId] || []);
     state.info = info;
     attachVideo();
 
@@ -227,7 +230,7 @@
       state.transcript = await fetchTranscript(info);
       if (!state || state.videoId !== videoId) return;
       state.transcriptText = L.transcriptToText(state.transcript.lines);
-      setStatus(`Transkript geladen (${state.transcript.lines.length} Zeilen${state.transcript.kind === 'asr' ? ', automatisch' : ''})`);
+      setStatus(`Transkript geladen (${state.transcript.lines.length} Zeilen${state.transcript.kind === 'asr' ? ', automatisch' : ''}) · KI-Analyse ${costEstimate()}`);
     } catch (e) {
       if (!state || state.videoId !== videoId) return;
       setStatus('Kein Transkript: ' + e.message, true);
@@ -235,8 +238,30 @@
     render();
 
     if (settings.autoAnalyze && state.transcript) {
-      runAnalysis(false).catch((e) => setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true));
+      const minutes = (info.lengthSeconds || 0) / 60;
+      if (settings.autoAnalyzeMaxMinutes > 0 && minutes > settings.autoAnalyzeMaxMinutes) {
+        setStatus(`Auto-Analyse übersprungen: Video länger als ${settings.autoAnalyzeMaxMinutes} min (manuell per ✨ Analyse, ${costEstimate()})`);
+      } else {
+        runAnalysis(false).catch((e) => setStatus('KI-Analyse fehlgeschlagen: ' + e.message, true));
+      }
     }
+  }
+
+  // Schätzung für eine KI-Analyse des aktuellen Transkripts.
+  function costEstimate() {
+    if (!state || !state.transcriptText) return '';
+    const inTok = L.estimateTokens(state.transcriptText) + 400;
+    const usd = L.estimateCostUsd(settings.model, inTok, 600);
+    return `≈ ${L.formatTokens(inTok)} Tokens` + (usd === null ? '' : ` ≈ ${L.formatUsd(usd)}`);
+  }
+
+  async function ignoreSegment(key) {
+    if (!state) return;
+    state.ignored.add(key);
+    state.segments = state.segments.filter((s) => L.segmentKey(s) !== key);
+    try { await chrome.storage.local.set({ ['ignored:' + state.videoId]: [...state.ignored] }); } catch (e) { /* ignore */ }
+    renderMarkers();
+    render();
   }
 
   function chaptersFromInfo(info) {
@@ -263,7 +288,7 @@
 
   function addSegments(segs) {
     if (!state || !segs || !segs.length) return;
-    state.segments = L.mergeSegments([state.segments, segs]);
+    state.segments = L.mergeSegments([state.segments, segs]).filter((s) => !state.ignored.has(L.segmentKey(s)));
     renderMarkers();
   }
 
@@ -475,6 +500,7 @@
       chapters: state.chapters,
       chat: state.chat,
       jumps: { intro: hasJump('intro'), sponsor: hasJump('sponsor'), conclusion: hasJump('conclusion') },
+      costEstimate: costEstimate(),
       transcript: state.transcript ? L.compactTranscript(state.transcript.lines) : [],
     };
   }
@@ -501,6 +527,7 @@
       case 'ui:jump': jump(msg.action); return snapshot();
       case 'ui:clearChat': if (state) state.chat = []; render(); return snapshot();
       case 'ui:command': runCommand(msg.command); return snapshot();
+      case 'ui:ignoreSegment': await ignoreSegment(String(msg.key || '')); return snapshot();
       default: throw new Error('Unbekannt: ' + msg.type);
     }
   }
@@ -640,7 +667,7 @@
     ]));
 
     // Ergebnisse / Chat
-    if (resultsOpen && (state.chat.length || state.chapters.length || state.analysis)) {
+    if (resultsOpen && (state.chat.length || state.chapters.length || state.analysis || state.segments.length)) {
       const box = el('div', { className: 'yts-results' });
       if (state.chat.length) {
         for (const m of state.chat) {
@@ -657,6 +684,19 @@
         const list = el('div', { className: 'yts-chapters' });
         for (const c of state.chapters) list.appendChild(hitRow(c.start, c.title));
         box.appendChild(el('details', null, [el('summary', null, [`Kapitel (${state.chapters.length})`]), list]));
+      }
+      const segs = state.segments.filter((s) => s.category !== 'chapter');
+      if (segs.length) {
+        const list = el('div', { className: 'yts-chapters' });
+        for (const s of segs) {
+          const row = hitRow(s.start, `${L.CATEGORY_LABELS[s.category] || s.category} bis ${L.formatTime(s.end)}${s.title ? ' · ' + s.title : ''} (${s.source})`);
+          row.appendChild(el('button', {
+            className: 'yts-x', title: 'Dieses Segment für dieses Video ignorieren',
+            onclick: (e) => { e.stopPropagation(); ignoreSegment(L.segmentKey(s)); },
+          }, ['✕']));
+          list.appendChild(row);
+        }
+        box.appendChild(el('details', null, [el('summary', null, [`Segmente (${segs.length})`]), list]));
       }
       bar.appendChild(box);
       box.scrollTop = box.scrollHeight;

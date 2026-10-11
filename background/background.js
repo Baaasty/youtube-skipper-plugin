@@ -1,5 +1,7 @@
 // Service Worker: SponsorBlock-Abfragen, Claude-API-Aufrufe, Cache und Nutzungsstatistik.
 'use strict';
+importScripts('../content/lib.js');
+const L = globalThis.YTSkipperLib;
 
 const SPONSORBLOCK_API = 'https://sponsor.ajay.app/api/skipSegments';
 const SPONSORBLOCK_CATEGORIES = ['sponsor', 'selfpromo', 'interaction', 'intro', 'outro', 'preview', 'filler', 'music_offtopic'];
@@ -8,12 +10,6 @@ const ANTHROPIC_VERSION = '2023-06-01';
 const DEFAULT_MODEL = 'claude-opus-5-5';
 // Modelle, die den serverseitigen Refusal-Fallback unterstützen.
 const FALLBACK_MODELS = new Set(['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1']);
-// USD pro 1M Tokens (Stand Oktober 2026) – nur für die Kostenschätzung in den Einstellungen.
-const PRICES = {
-  'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2 },
-  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.2 },
-  'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheRead: 0.01 },
-};
 const CACHE_LIMIT = 100;
 
 const SYSTEM_PROMPT =
@@ -250,7 +246,7 @@ async function recordUsage(model, usage) {
   const cacheRead = usage.cache_read_input_tokens || 0;
   const cacheWrite = usage.cache_creation_input_tokens || 0;
   u.calls += 1; u.input += input; u.output += output; u.cacheRead += cacheRead; u.cacheWrite += cacheWrite;
-  const p = PRICES[model];
+  const p = L.PRICES[model];
   if (p) {
     u.usd += (input * p.input + cacheWrite * p.input * 1.25 + cacheRead * p.cacheRead + output * p.output) / 1e6;
   }

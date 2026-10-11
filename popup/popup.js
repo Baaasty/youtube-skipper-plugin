@@ -96,6 +96,16 @@ function hitRow(start, label, highlight) {
   ]);
 }
 
+function copyButton(label, getText) {
+  const b = el('button', { className: 'chip small' }, [label]);
+  b.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(getText()); b.textContent = 'Kopiert ✓'; }
+    catch (e) { b.textContent = 'Kopieren fehlgeschlagen'; }
+    setTimeout(() => { b.textContent = label; }, 1500);
+  });
+  return b;
+}
+
 function setBusy(b) {
   for (const id of ['askAI', 'analyze']) $(id).disabled = b || !(snap && snap.hasTranscript);
 }
@@ -147,15 +157,35 @@ function render() {
   if (snap.chapters.length) {
     const list = el('div', { className: 'chapters' });
     for (const c of snap.chapters) list.appendChild(hitRow(c.start, c.title));
+    list.appendChild(copyButton('Kapitel kopieren (YouTube-Format)', () => L.chaptersToDescription(snap.chapters)));
     extras.appendChild(el('details', null, [el('summary', null, [`Kapitel (${snap.chapters.length})`]), list]));
+  }
+  const segs = snap.segments.filter((s) => s.category !== 'chapter');
+  if (segs.length) {
+    const list = el('div', { className: 'chapters' });
+    for (const s of segs) {
+      const row = hitRow(s.start, `${L.CATEGORY_LABELS[s.category] || s.category} bis ${L.formatTime(s.end)}${s.title ? ' · ' + s.title : ''} (${s.source})`);
+      row.appendChild(el('button', {
+        className: 'x', title: 'Dieses Segment für dieses Video ignorieren',
+        onclick: (e) => { e.stopPropagation(); act({ type: 'ui:ignoreSegment', key: L.segmentKey(s) }); },
+      }, ['✕']));
+      list.appendChild(row);
+    }
+    extras.appendChild(el('details', null, [el('summary', null, [`Segmente (${segs.length})`]), list]));
   }
   if (snap.transcript && snap.transcript.length) {
     const list = el('div', { className: 'transcript' });
     const det = el('details', null, [el('summary', null, ['Transkript']), list]);
     det.addEventListener('toggle', () => {
-      if (det.open && !list.childElementCount) for (const b of snap.transcript) list.appendChild(hitRow(b.start, b.text));
+      if (det.open && !list.childElementCount) {
+        list.appendChild(copyButton('Transkript kopieren', () => snap.transcript.map((b) => `[${L.formatTime(b.start)}] ${b.text}`).join('\n')));
+        for (const b of snap.transcript) list.appendChild(hitRow(b.start, b.text));
+      }
     });
     extras.appendChild(det);
+  }
+  if (snap.costEstimate && !snap.hasAnalysis) {
+    extras.appendChild(el('div', { className: 'stats' }, ['KI-Analyse ' + snap.costEstimate]));
   }
 }
 

@@ -13,7 +13,7 @@ const CATEGORIES = [
 
 const DEFAULTS = {
   autoSkip: true, useSponsorBlock: true, autoAnalyze: false, showBar: true, language: '',
-  model: 'claude-opus-5-5',
+  model: 'claude-opus-5-5', autoAnalyzeMaxMinutes: 60,
   skipCategories: { sponsor: true, selfpromo: true, interaction: false, intro: false, outro: false, preview: false, filler: false, music_offtopic: false },
 };
 
@@ -38,6 +38,7 @@ async function load() {
   $('apiKey').value = apiKey;
   $('model').value = s.model;
   $('autoAnalyze').checked = s.autoAnalyze;
+  $('autoAnalyzeMaxMinutes').value = s.autoAnalyzeMaxMinutes;
   $('autoSkip').checked = s.autoSkip;
   $('useSponsorBlock').checked = s.useSponsorBlock;
   $('showBar').checked = s.showBar;
@@ -52,6 +53,7 @@ async function save() {
   const settings = {
     model: $('model').value,
     autoAnalyze: $('autoAnalyze').checked,
+    autoAnalyzeMaxMinutes: Math.max(0, Number($('autoAnalyzeMaxMinutes').value) || 0),
     autoSkip: $('autoSkip').checked,
     useSponsorBlock: $('useSponsorBlock').checked,
     showBar: $('showBar').checked,

@@ -21,11 +21,11 @@ Stand wird mit jedem Push aktualisiert. `[x]` = fertig und auf `main`, `[ ]` = o
 
 ## v0.3 – Komfort und Kosten
 
-- [ ] Kostenschätzung vor der KI-Analyse (Tokens/Preis für das aktuelle Modell) in der Statuszeile
-- [ ] Obergrenze für automatische Analyse (Videolänge), um lange Videos nicht ungefragt zu analysieren
-- [ ] Export: Kapitel als YouTube-Beschreibung und Transkript als Text in die Zwischenablage
-- [ ] Zweisprachiges UI (Deutsch/Englisch) über `chrome.i18n`
-- [ ] Segment-Korrektur: einzelnes Segment für dieses Video ignorieren
+- [x] Kostenschätzung vor der KI-Analyse (Tokens/Preis für das aktuelle Modell) in der Statuszeile
+- [x] Obergrenze für automatische Analyse (Videolänge), um lange Videos nicht ungefragt zu analysieren
+- [x] Export: Kapitel als YouTube-Beschreibung und Transkript als Text in die Zwischenablage
+- [~] Zweisprachiges UI (Deutsch/Englisch) über `chrome.i18n`
+- [x] Segment-Korrektur: einzelnes Segment für dieses Video ignorieren
 
 ## v0.4 – Release-Reife
 

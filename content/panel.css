@@ -86,3 +86,5 @@
 .yts-skip-btn:hover { background: #000; border-color: #fff; }
 .yts-skip-btn[hidden] { display: none; }
 .ytp-autohide .yts-skip-btn { bottom: 24px; }
+#yt-skipper-bar .yts-x { margin-left: auto; background: none; border: 0; color: var(--yts-muted); cursor: pointer; padding: 0 4px; font-size: 12px; }
+#yt-skipper-bar .yts-x:hover { color: #c00; }
